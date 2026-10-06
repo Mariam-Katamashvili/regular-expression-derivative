@@ -171,6 +171,33 @@ Module SimilarityRelations (X : SYM).
       rewrite Hidem in H.
       exact H.
     Qed.
+
+    (* x ⊗ y > 0 forces x > 0 and y > 0. *)
+    Lemma tn_pos (x y : simval) :
+      in01 x -> in01 y -> 0 < T x y -> 0 < x /\ 0 < y.
+    Proof.
+      move=> Hx Hy Hpos.
+      have H0 : in01 0 by split; lra.
+      have H1 : in01 1 by split; lra.
+      have Hz : forall z, in01 z -> T 0 z <= 0.
+      { move=> z Hz.
+        apply: (Rle_trans _ (T 0 1)).
+        - apply: (@tn_mono_r z 1 0 Hz H1 H0).
+          by case: Hz.
+        - rewrite (@tn_unit T 0 H0).
+          exact: Rle_refl. }
+      have [Hx0 _] := Hx.
+      have [Hy0 _] := Hy.
+      split.
+      - case: (Rle_lt_or_eq_dec 0 x Hx0) => // Hx_eq.
+        rewrite -Hx_eq in Hpos.
+        have := Hz y Hy.
+        lra.
+      - case: (Rle_lt_or_eq_dec 0 y Hy0) => // Hy_eq.
+        rewrite -Hy_eq (@tn_comm T x 0 Hx H0) in Hpos.
+        have := Hz x Hx.
+        lra.
+    Qed.
   End TNormFacts.
 
   (* ============================================================ *)
@@ -289,7 +316,7 @@ Module SimilarityRelations (X : SYM).
     Qed.
 
     (* ============================================================ *)
-    (* Lemma 3.2(2), min T-norm: R^ω is a similarity                *)
+    (* Lemma 3.3(2), min T-norm: R^ω is a similarity                *)
     (* ============================================================ *)
 
     Lemma Rw_refl : forall w, Rw w w = 1.
@@ -1192,7 +1219,7 @@ Module SimilarityRelations (X : SYM).
             -- apply bridge_right_nonempty; assumption.
     Qed.
 
-    (* Lemma 3.2(3), min T-norm *)
+    (* Lemma 3.3(3), min T-norm *)
     Lemma RL_is_similarity :
       (forall L, RL L L = 1) /\
       (forall L1 L2, RL L1 L2 = RL L2 L1) /\
@@ -1755,5 +1782,333 @@ Module SimilarityRelations (X : SYM).
 
 
   End BaseSymbolSimilarity.
+
+  (* ============================================================ *)
+  (* Definition 3.5 (R^E): similarity on regex, general T-norm    *)
+  (* ============================================================ *)
+
+  Section GeneralRegexSimilarity.
+
+    Variable T : tnorm.
+    Variable R : fuzzy_rel A.
+    Hypothesis R_tsim : is_T_similarity T R.
+
+    Let R_range : forall a b, in01 (R a b) := tsim_range R_tsim.
+    Let R_refl : forall a, R a a = 1 := prox_refl (tsim_prox R_tsim).
+
+    (* inf_n f(n), built from the completeness axiom as [InfL] is;
+       0 if f is not bounded below *)
+    Definition nat_image (f : nat -> simval) : simval -> Prop :=
+      fun y => exists n, y = - f n.
+
+    Lemma nat_image_nonempty (f : nat -> simval) : exists y, nat_image f y.
+    Proof. by exists (- f O), O. Qed.
+
+    Definition InfN (f : nat -> simval) : simval :=
+      match excluded_middle_informative (bound (nat_image f)) with
+      | left Hb =>
+          - proj1_sig (completeness (nat_image f) Hb (nat_image_nonempty f))
+      | right _ => 0
+      end.
+
+    Lemma nat_image_bound (f : nat -> simval) (m : simval) :
+      (forall k, m <= f k) -> bound (nat_image f).
+    Proof.
+      move=> Hm.
+      exists (- m).
+      move=> y [k ->].
+      have := Hm k.
+      lra.
+    Qed.
+
+    Lemma InfN_lower (f : nat -> simval) (m : simval) (n : nat) :
+      (forall k, m <= f k) -> InfN f <= f n.
+    Proof.
+      move=> Hm.
+      rewrite /InfN.
+      case: (excluded_middle_informative (bound (nat_image f))) => [Hb|Hnb].
+      - case: (completeness _ _ _) => s [Hup _] /=.
+        have := Hup (- f n) (ex_intro _ n erefl).
+        lra.
+      - exfalso.
+        apply: Hnb.
+        exact: (nat_image_bound Hm).
+    Qed.
+
+    Lemma InfN_greatest (f : nat -> simval) (m : simval) :
+      (forall k, m <= f k) -> m <= InfN f.
+    Proof.
+      move=> Hm.
+      rewrite /InfN.
+      case: (excluded_middle_informative (bound (nat_image f))) => [Hb|Hnb].
+      - case: (completeness _ _ _) => s [_ Hleast] /=.
+        have : s <= - m.
+        { apply: Hleast => y [k ->].
+          have := Hm k.
+          lra. }
+        lra.
+      - exfalso.
+        apply: Hnb.
+        exact: (nat_image_bound Hm).
+    Qed.
+
+    (* ⊗^n x, with ⊗^0 x = 1 *)
+    Fixpoint tpow (n : nat) (x : simval) : simval :=
+      match n with
+      | O => 1
+      | S n' => T x (tpow n' x)
+      end.
+
+    Lemma tpow_in01 (n : nat) (x : simval) : in01 x -> in01 (tpow n x).
+    Proof.
+      move=> Hx.
+      elim: n => [|n IH] /=.
+      - split; lra.
+      - exact: tn_in01.
+    Qed.
+
+    Lemma tpow_one (n : nat) : tpow n 1 = 1.
+    Proof.
+      elim: n => [|n IH] //=.
+      rewrite IH.
+      apply: tn_unit.
+      split; lra.
+    Qed.
+
+    Lemma InfN_tpow_in01 (x : simval) :
+      in01 x -> in01 (InfN (fun n => tpow n x)).
+    Proof.
+      move=> Hx.
+      have H0 : forall k, 0 <= tpow k x.
+      { move=> k. by case: (tpow_in01 k Hx). }
+      split.
+      - exact: (InfN_greatest H0).
+      - apply: (Rle_trans _ (tpow 0 x)).
+        + exact: (InfN_lower 0 H0).
+        + rewrite /=. lra.
+    Qed.
+
+    Lemma InfN_tpow_le (x : simval) :
+      in01 x -> InfN (fun n => tpow n x) <= x.
+    Proof.
+      move=> Hx.
+      have H0 : forall k, 0 <= tpow k x.
+      { move=> k. by case: (tpow_in01 k Hx). }
+      apply: (Rle_trans _ (tpow 1 x)).
+      - exact: (InfN_lower 1 H0).
+      - rewrite /= (@tn_unit T x Hx).
+        lra.
+    Qed.
+
+    Lemma InfN_tpow_one : InfN (fun n => tpow n 1) = 1.
+    Proof.
+      have H1 : forall k, 1 <= tpow k 1.
+      { move=> k. rewrite tpow_one. lra. }
+      apply: Rle_antisym.
+      - apply: (Rle_trans _ (tpow 0 1)).
+        + exact: (InfN_lower 0 H1).
+        + rewrite /=. lra.
+      - exact: (InfN_greatest H1).
+    Qed.
+
+    Definition regex_eq_dec (r s : regex) : {r = s} + {r <> s}.
+    Proof. decide equality. exact: eq_comparable. Defined.
+
+    Arguments regex_eq_dec : simpl never.
+
+    (* Definition 3.5 *)
+    Fixpoint RE (r s : regex) {struct r} : simval :=
+      if regex_eq_dec r s then 1 else
+      match r, s with
+      | RS.Char a, RS.Char b => R a b
+      | RS.Alt r1 r2, RS.Alt s1 s2 => smin (RE r1 s1) (RE r2 s2)
+      | RS.Seq r1 r2, RS.Seq s1 s2 => T (RE r1 s1) (RE r2 s2)
+      | RS.Star r1, RS.Star s1 => InfN (fun n => tpow n (RE r1 s1))
+      | _, _ => 0
+      end.
+
+    Lemma RE_range (r s : regex) : in01 (RE r s).
+    Proof.
+      have H0 : in01 0 by split; lra.
+      have H1 : in01 1 by split; lra.
+      elim: r s => [| |a|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                     s /=;
+        case: (regex_eq_dec _ s) => /= _; try exact H1;
+        case: s => [| |b|s1 s2|s1 s2|s1|s1 s2|s1] /=; try exact H0.
+      - exact: R_range.
+      - exact: (smin_in01 (IH1 s1) (IH2 s2)).
+      - exact: (@tn_in01 T _ _ (IH1 s1) (IH2 s2)).
+      - exact: (InfN_tpow_in01 (IH1 s1)).
+    Qed.
+
+    (* The clauses of Definition 3.5 hold as equations. *)
+    Lemma RE_refl (r : regex) : RE r r = 1.
+    Proof.
+      case: r => [| |a|r1 r2|r1 r2|r1|r1 r2|r1] //=;
+        case: (regex_eq_dec _ _) => /= [//|H]; by case: H.
+    Qed.
+
+    Lemma RE_Char (a b : A) : RE (RS.Char a) (RS.Char b) = R a b.
+    Proof.
+      rewrite /=.
+      case: (regex_eq_dec _ _) => /= [[<-]|_] //;
+        by rewrite R_refl.
+    Qed.
+
+    Lemma RE_Alt (r1 r2 s1 s2 : regex) :
+      RE (RS.Alt r1 r2) (RS.Alt s1 s2) = smin (RE r1 s1) (RE r2 s2).
+    Proof.
+      rewrite /=.
+      case: (regex_eq_dec _ _) => /= [[<- <-]|_] //;
+        by rewrite !RE_refl sminxx.
+    Qed.
+
+    Lemma RE_Seq (r1 r2 s1 s2 : regex) :
+      RE (RS.Seq r1 r2) (RS.Seq s1 s2) = T (RE r1 s1) (RE r2 s2).
+    Proof.
+      rewrite /=.
+      case: (regex_eq_dec _ _) => /= [[<- <-]|_] //;
+        rewrite !RE_refl tn_unit //; split; lra.
+    Qed.
+
+    Lemma RE_Star (r1 s1 : regex) :
+      RE (RS.Star r1) (RS.Star s1) = InfN (fun n => tpow n (RE r1 s1)).
+    Proof.
+      rewrite /=.
+      case: (regex_eq_dec _ _) => /= [[<-]|_] //;
+        by rewrite RE_refl InfN_tpow_one.
+    Qed.
+
+    Definition same_head (r s : regex) : bool :=
+      match r, s with
+      | RS.Char _, RS.Char _
+      | RS.Alt _ _, RS.Alt _ _
+      | RS.Seq _ _, RS.Seq _ _
+      | RS.Star _, RS.Star _ => true
+      | _, _ => false
+      end.
+
+    Lemma RE_otherwise (r s : regex) :
+      r <> s -> ~~ same_head r s -> RE r s = 0.
+    Proof.
+      case: r => [| |a|r1 r2|r1 r2|r1|r1 r2|r1];
+        case: s => [| |b|s1 s2|s1 s2|s1|s1 s2|s1] //= Hne _;
+        by case: (regex_eq_dec _ _).
+    Qed.
+
+    (* ============================================================ *)
+    (* Lemma 3.2: R^E > 0 forces a common skeleton                  *)
+    (* ============================================================ *)
+
+    (* r[a1,...,an]: a regex with a hole at every symbol occurrence *)
+    Inductive skeleton : Type :=
+    | SkEmpty
+    | SkEps
+    | SkHole
+    | SkAlt  : skeleton -> skeleton -> skeleton
+    | SkSeq  : skeleton -> skeleton -> skeleton
+    | SkStar : skeleton -> skeleton
+    | SkAnd  : skeleton -> skeleton -> skeleton
+    | SkNeg  : skeleton -> skeleton.
+
+    Fixpoint holes (k : skeleton) : nat :=
+      match k with
+      | SkEmpty | SkEps => 0
+      | SkHole => 1
+      | SkAlt k1 k2 | SkSeq k1 k2 | SkAnd k1 k2 => (holes k1 + holes k2)%nat
+      | SkStar k1 | SkNeg k1 => holes k1
+      end.
+
+    (* fills the holes of k with xs, left to right *)
+    Fixpoint fill (k : skeleton) (xs : seq A) : regex :=
+      match k with
+      | SkEmpty => RS.Empty
+      | SkEps => RS.Eps
+      | SkHole => if xs is a :: _ then RS.Char a else RS.Empty
+      | SkAlt k1 k2 =>
+          RS.Alt (fill k1 (take (holes k1) xs)) (fill k2 (drop (holes k1) xs))
+      | SkSeq k1 k2 =>
+          RS.Seq (fill k1 (take (holes k1) xs)) (fill k2 (drop (holes k1) xs))
+      | SkStar k1 => RS.Star (fill k1 xs)
+      | SkAnd k1 k2 =>
+          RS.And (fill k1 (take (holes k1) xs)) (fill k2 (drop (holes k1) xs))
+      | SkNeg k1 => RS.Neg (fill k1 xs)
+      end.
+
+    (* the skeleton of r and its symbols, left to right *)
+    Fixpoint skel_of (r : regex) : skeleton :=
+      match r with
+      | RS.Empty => SkEmpty
+      | RS.Eps => SkEps
+      | RS.Char _ => SkHole
+      | RS.Alt r1 r2 => SkAlt (skel_of r1) (skel_of r2)
+      | RS.Seq r1 r2 => SkSeq (skel_of r1) (skel_of r2)
+      | RS.Star r1 => SkStar (skel_of r1)
+      | RS.And r1 r2 => SkAnd (skel_of r1) (skel_of r2)
+      | RS.Neg r1 => SkNeg (skel_of r1)
+      end.
+
+    Fixpoint syms_of (r : regex) : seq A :=
+      match r with
+      | RS.Empty | RS.Eps => [::]
+      | RS.Char a => [:: a]
+      | RS.Alt r1 r2 | RS.Seq r1 r2 | RS.And r1 r2 => syms_of r1 ++ syms_of r2
+      | RS.Star r1 | RS.Neg r1 => syms_of r1
+      end.
+
+    Lemma size_syms_of (r : regex) : size (syms_of r) = holes (skel_of r).
+    Proof.
+      elim: r => [| |a|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                   //=;
+        by rewrite size_cat IH1 IH2.
+    Qed.
+
+    Lemma fill_skel_of (r : regex) : fill (skel_of r) (syms_of r) = r.
+    Proof.
+      elim: r => [| |a|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                   //=;
+        try by rewrite IH1.
+      all: by rewrite (take_size_cat _ (size_syms_of r1))
+                      (drop_size_cat _ (size_syms_of r1)) IH1 IH2.
+    Qed.
+
+    (* R^E(r,s) > 0 forces r and s to have the same skeleton, on all of E *)
+    Lemma RE_pos_skel_of (r s : regex) :
+      0 < RE r s -> skel_of r = skel_of s.
+    Proof.
+      elim: r s => [| |a|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                     s /=;
+        case: (regex_eq_dec _ s) => /= [<- //|_];
+        case: s => [| |b|s1 s2|s1 s2|s1|s1 s2|s1] //=;
+        try (move=> ?; exfalso; lra).
+      - move=> H.
+        have H1 : 0 < RE r1 s1 := Rlt_le_trans _ _ _ H (smin_lel _ _).
+        have H2 : 0 < RE r2 s2 := Rlt_le_trans _ _ _ H (smin_ler _ _).
+        by rewrite (IH1 _ H1) (IH2 _ H2).
+      - move=> /(tn_pos (RE_range _ _) (RE_range _ _)) [H1 H2].
+        by rewrite (IH1 _ H1) (IH2 _ H2).
+      - move=> H.
+        have H1 : 0 < RE r1 s1 :=
+          Rlt_le_trans _ _ _ H (InfN_tpow_le (RE_range r1 s1)).
+        by rewrite (IH1 _ H1).
+    Qed.
+
+    (* Lemma 3.2 *)
+    Theorem RE_pos_skeleton (r1 r2 : regex) :
+      RS.restricted_regex r1 -> RS.restricted_regex r2 ->
+      0 < RE r1 r2 ->
+      exists (r : skeleton) (xs ys : seq A),
+        size xs = holes r /\ size ys = holes r /\
+        r1 = fill r xs /\ r2 = fill r ys.
+    Proof.
+      move=> _ _ /RE_pos_skel_of Hsk.
+      exists (skel_of r1), (syms_of r1), (syms_of r2).
+      split; first exact: size_syms_of.
+      split; first by rewrite Hsk size_syms_of.
+      split; first by rewrite fill_skel_of.
+      by rewrite Hsk fill_skel_of.
+    Qed.
+
+  End GeneralRegexSimilarity.
 
 End SimilarityRelations.

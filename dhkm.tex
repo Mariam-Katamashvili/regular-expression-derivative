@@ -268,8 +268,14 @@ $$\mathcal{R}^E(r,s) = \begin{cases}1 & \mbox{ if } r=s; \\
 \end{cases}$$
 \end{definition}
 
-{\color{red}\begin{conjecture} Let $r,s$ be restricted regular expressions over $\Sigma$, and let $\mathcal{R}$ be a T-similarity relation on $\Sigma$, then for all restricted regular expressions $r_1,r_2$ if $\mathcal{R}^E(r_1,r_2)\gneq 0$ then $r_1=r[a_1,\ldots,a_n] $ and $r_2=r[b_1,\ldots,b_n] $ for suitable choices of $r$ and $a_i$'s and $b_i$'s. 
-\end{conjecture}}
+\begin{lemma} Let $r,s$ be restricted regular expressions over $\Sigma$, and let $\mathcal{R}$ be a T-similarity relation on $\Sigma$, then for all restricted regular expressions $r_1,r_2$ if $\mathcal{R}^E(r_1,r_2)\gneq 0$ then $r_1=r[a_1,\ldots,a_n] $ and $r_2=r[b_1,\ldots,b_n] $ for suitable choices of $r$ and $a_i$'s and $b_i$'s.
+\end{lemma}
+{\color{blue}\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/SimilarityRelations.v}, theorem
+\path{RE_pos_skeleton}~\cite{OurRocqRepo}.
+\end{sloppypar}
+\end{proof}}
 
 We can straightforwardly prove that all the above fuzzy relations are indeed T-similarities.
 \begin{lemma} \label{T-similarity}Given a T-similarity relation $\mathcal R$ on $\Sigma$ \begin{enumerate}

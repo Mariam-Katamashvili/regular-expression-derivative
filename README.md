@@ -57,6 +57,8 @@ The following table maps the main definitions, lemmas, propositions, and theorem
 | Definition (Appendix): T-norm | `coq/src/SimilarityRelations.v`, record `tnorm`; supporting proofs `tn_mono_r`, `tn_mono2`, `tn_idem_le` |
 | Definition: Fuzzy relation, cut, T-similarity, Gödelian | `coq/src/SimilarityRelations.v`, definitions `fuzzy_rel`, `cut_value`, `mu_cut`, `is_T_similarity`, `is_godelian` |
 | Lemma: μ-cuts of T-similarity relations are equivalences | `coq/src/SimilarityRelations.v`, proofs `T_equivalence_idem` (item 1), `T_equivalence_godelian` (item 2) |
+| Definition: T-similarity on Regular Expressions - General T-norm | `coq/src/SimilarityRelations.v`, definition `RE`; star clause via `tpow`, `InfN`; clause equations `RE_refl`, `RE_Char`, `RE_Alt`, `RE_Seq`, `RE_Star`, `RE_otherwise`; supporting proofs `RE_range`, `InfN_lower`, `InfN_greatest` |
+| Lemma: positive `R^E` forces a common skeleton | `coq/src/SimilarityRelations.v`, theorem `RE_pos_skeleton`; definitions `skeleton`, `holes`, `fill`; supporting proofs `RE_pos_skel_of`, `fill_skel_of`, `size_syms_of`, `tn_pos` |
 
 | Paper item | Paper location | Rocq location |
 |---|---|---|
