@@ -1,7 +1,6 @@
 From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq.
 
 From regexderiv Require Import Alphabet.
-From regexderiv Require Import FiniteAlphabet.
 From regexderiv Require Import RegexSemantics.
 From regexderiv Require Import Nullable.
 From regexderiv Require Import Derivatives.

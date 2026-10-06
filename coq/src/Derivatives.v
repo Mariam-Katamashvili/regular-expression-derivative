@@ -65,17 +65,17 @@ Module Derivatives (X : OSYM).
       case: ifP=> [/eqP ->|hab] /=.
       + (* a=b *)
         by rewrite /eps /atom
-                   /Languages.Languages.eps /Languages.Languages.atom
+                   /Languages.eps /Languages.atom
                    /= eqseq_cons eqxx /=.
       + (* a!=b *)
         move/negPf: hab=>hab.
         by rewrite /void /atom
-                   /Languages.Languages.void /Languages.Languages.atom
+                   /Languages.void /Languages.atom
                    /= eqseq_cons hab /=.
 
     - (* Alt *)
       move=> r1 IH1 r2 IH2 w.
-      rewrite /in_mem /= /plus /Languages.Languages.plus /=.
+      rewrite /in_mem /= /plus /Languages.plus /=.
       exact: (congr2 orb (IH1 w) (IH2 w)).
 
     - (* Seq *)
@@ -159,12 +159,12 @@ Module Derivatives (X : OSYM).
 
     - (* And *)
       move=> r1 IH1 r2 IH2 w.
-      rewrite /in_mem /= /prod /Languages.Languages.prod /=.
+      rewrite /in_mem /= /prod /Languages.prod /=.
       exact: (congr2 andb (IH1 w) (IH2 w)).
 
     - (* Neg *)
       move=> r IHr w.
-      rewrite /in_mem /= /compl /Languages.Languages.compl /=.
+      rewrite /in_mem /= /compl /Languages.compl /=.
       exact: (congr1 negb (IHr w)).
   Qed.
 
