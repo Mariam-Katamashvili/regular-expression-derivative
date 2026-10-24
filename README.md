@@ -59,6 +59,7 @@ The following table maps the main definitions, lemmas, propositions, and theorem
 | Lemma: μ-cuts of T-similarity relations are equivalences | `coq/src/SimilarityRelations.v`, proofs `T_equivalence_idem` (item 1), `T_equivalence_godelian` (item 2) |
 | Definition: T-similarity on Regular Expressions - General T-norm | `coq/src/SimilarityRelations.v`, definition `RE`; star clause via `tpow`, `InfN`; clause equations `RE_refl`, `RE_Char`, `RE_Alt`, `RE_Seq`, `RE_Star`, `RE_otherwise`; supporting proofs `RE_range`, `InfN_lower`, `InfN_greatest` |
 | Lemma: positive `R^E` forces a common skeleton | `coq/src/SimilarityRelations.v`, theorem `RE_pos_skeleton`; definitions `skeleton`, `holes`, `fill`; supporting proofs `RE_pos_skel_of`, `fill_skel_of`, `size_syms_of`, `tn_pos` |
+| Lemma: Finite Syntactic Similarity | `coq/src/SimilarityRelations.v`, theorem `RE_nonzero_finite`; definition `sym_seqs`; supporting proofs `sym_seqs_complete`, `In_map_mem`, `RE_pos_skel_of` |
 
 | Paper item | Paper location | Rocq location |
 |---|---|---|

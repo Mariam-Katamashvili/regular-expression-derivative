@@ -331,10 +331,12 @@ We have in fact the following crucial lemma.
 \begin{lemma}[Finite Syntactic Similarity]\label{lemma:syntactic-similarity}
 If $\Sigma$ is finite, then for all $r$ the set $\{ s\mid \mathcal R^E(s,r)\neq 0\}$ is finite.
 \end{lemma}
-\begin{proof}
-By induction. {\color{red} Rocq proof ??}\vspace{0.5cm}
-
-\end{proof}
+{\color{blue}\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/SimilarityRelations.v}, theorem
+\path{RE_nonzero_finite}~\cite{OurRocqRepo}.
+\end{sloppypar}
+\end{proof}}
 
 Finally notice that Theorem~\ref{thm:Rr-RL-bridge} fails for regular expressions when $\&$ and $\neg$ are
 allowed. These are simple counterexamples.

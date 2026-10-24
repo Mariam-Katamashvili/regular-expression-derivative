@@ -2109,6 +2109,53 @@ Module SimilarityRelations (X : SYM).
       by rewrite Hsk fill_skel_of.
     Qed.
 
+    (* ============================================================ *)
+    (* Lemma 3.5: Finite Syntactic Similarity                       *)
+    (* ============================================================ *)
+
+    Section FiniteSyntacticSimilarity.
+
+      (* a finite alphabet: [alphabet] lists every symbol *)
+      Variable alphabet : seq A.
+      Hypothesis alphabet_complete : forall a : A, a \in alphabet.
+
+      (* all sequences of n symbols *)
+      Fixpoint sym_seqs (n : nat) : seq (seq A) :=
+        if n is n'.+1 then [seq a :: xs | a <- alphabet, xs <- sym_seqs n']
+        else [:: [::]].
+
+      Lemma sym_seqs_complete (xs : seq A) : xs \in sym_seqs (size xs).
+      Proof.
+        elim: xs => [|a xs IH] /=; first by rewrite mem_seq1.
+        apply: allpairs_f; [exact: alphabet_complete | exact: IH].
+      Qed.
+
+      Lemma In_map_mem (T1 : eqType) (T2 : Type) (f : T1 -> T2) (x : T1) (l : seq T1) :
+        x \in l -> List.In (f x) (map f l).
+      Proof.
+        elim: l => [|y l IH]; first by rewrite in_nil.
+        rewrite in_cons /= => /orP [/eqP ->|/IH H]; by [left|right].
+      Qed.
+
+      (* Lemma 3.5, on all of E: only finitely many s have R^E(s,r) <> 0 *)
+      Theorem RE_nonzero_finite (r : regex) :
+        exists l : seq regex, forall s, RE s r <> 0 -> List.In s l.
+      Proof.
+        exists [seq fill (skel_of r) xs | xs <- sym_seqs (holes (skel_of r))].
+        move=> s Hs.
+        have Hpos : 0 < RE s r.
+        { case: (RE_range s r) => H0 _.
+          apply: Rnot_le_lt => Hle.
+          exact: Hs (Rle_antisym _ _ Hle H0). }
+        have Hsk := RE_pos_skel_of Hpos.
+        rewrite -(fill_skel_of s) Hsk.
+        apply: In_map_mem.
+        rewrite -Hsk -size_syms_of.
+        exact: sym_seqs_complete.
+      Qed.
+
+    End FiniteSyntacticSimilarity.
+
   End GeneralRegexSimilarity.
 
 End SimilarityRelations.
