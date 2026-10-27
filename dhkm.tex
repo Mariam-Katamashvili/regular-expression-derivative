@@ -535,6 +535,8 @@ $
 \{\partial_u^\mu(L)\mid u\in \Sigma^\star\}
 $
 is finite. 
+\item (Decidability) of T-similarity of regular languages.
+{\color{red} THIS WAS MISSING}
 \end{enumerate}
 \end{theorem}
 \begin{proof}{\color{red} We might not want to provide Rocq proofs for all, but anyway the finiteness issue needs to be discussed. }
@@ -549,14 +551,15 @@ is finite.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{The special case of equivalences.}
+\subsection{The case when $\mu$-cuts are equivalences.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This section is a generalization of the results in~\cite{KM26} which were originally given for G\"odel's minimum T-norm, see Definition~\ref{norms}. 
-Throughout this section we rephrase their results for the case of a general T-similarity relation, $\cR$, for which its $\mu$-cut, $\cR^\mu$ is an equivalence, see Lemma~\ref{T-equivalence}. Capitalizing on this all definitions and theorems of Section~\ref{sec:fuzzyderivatives} because all $\mu$-neighborhoods of symbols, $a$ over $\Sigma$, \ie $\{b \in\Sigma : (a,b)\in\mathcal{R}_\cut\}$, become equivalence classes. 
+All the results in this section are given for a general T-similarity relation, $\cR$, for which its $\mu$-cut, $\cR^\mu$ is an equivalence, see Lemma~\ref{T-equivalence}. Hence all $\mu$-neighborhoods of symbols $a\in\Sigma$, \ie $\{b \in\Sigma : (a,b)\in\mathcal{R}_\cut\}$, become equivalence classes.  
+Equivalences on $\Sigma$ are inherited at the level of words, expressions, and languages.
 
 \begin{proposition}\label{prop:cut-equivalence}
-Let $\cR$ be a g\"odelian T-similarity relation on $\Sigma$ or just a T-similarity relation for a cut value $0 < \cut \le 1$ such that $\mu\otimes\mu=\mu$ then 
+Let $\cR$ be a g\"odelian T-similarity relation on $\Sigma$ or a T-similarity relation for a cut value $0 < \cut \le 1$ such that $\mu\otimes\mu=\mu$ then 
 %$\cR^\mu$ is an equivalence.
 the following hold. 
 \begin{enumerate}
@@ -584,21 +587,7 @@ is an equivalence relation on languages.
 
 {\color{red} Rocq?? Proofs??}\vspace{1 cm}
 
-{\color{red}Notice that we have also the following: 
-\begin{proposition}\label{prop:cut-equivalence-notice}
-Let $\cR^\mu$ be an equivalence.
-\begin{enumerate}
-%\item The relation $ a \sim_\cut^\Sigma b \quad\Longleftrightarrow\quad \cR(a,b)\ge \cut.$ is an equivalence relation on $\Sigma$. 
-%\item The relation $ r\sim_\cut^E s\quad\Longleftrightarrow\quad\mathcal R^E(r,s)\ge\cut$ is an equivalence relation on restricted regular expressions.
-\item The relation $
-  w_1\sim_\cut^{\Sigma^*}w_2
-  \quad\Longleftrightarrow\quad
-  \mathcal R^w(w_1,w_2)\ge(\cut)^{|w_1|} $
- is an equivalence relation on words, which naturally induces an equivalence relation on languages, $
-  L_1\sim_\cut^{\mathcal P(\Sigma^*)}L_2$.
-\end{enumerate}
-\end{proposition}} 
-
+Capitalizing on the above equivalences definitions in Section~\ref{sec:fuzzyderivatives} simplify significantly. 
 
 \begin{proposition}\label{fuzzyderivativeGodel}
 Let $\cR$ be a g\"odelian T-similarity relation on $\Sigma$ or just a T-similarity relation for a cut value $0 < \cut \le 1$ such that $\mu\otimes\mu=\mu$, moreover let $\mathcal{L}\subseteq\Sigma^*$ and $a\in\Sigma$. 
@@ -620,11 +609,12 @@ $$
 $$
 \end{enumerate}
 \end{proposition}
-{\color{red} Rocq?? Proofs??}
+{\color{red} Rocq?? Proofs??}\bigskip
 
-Proposition~\ref{the:quotient-fuzzy-derivative} below provides the explanation for all the above simplifications, by showing that when $\cR^\mu$ is an equivalence because either $\cR$ is a g\"odelian T-similarity relation on $\Sigma$ or just a T-similarity relation for a cut value $0<\cut \le 1$ such that $\mu\otimes\mu=\mu$ then the fuzzy derivatives become ordinary derivatives if we pass to the quotient alphabet, {\em i.e.}, once letters are identified up to
+Proposition~\ref{the:quotient-fuzzy-derivative} below provides the explanation for  the above simplifications. Namely, when $\cR^\mu$ is an equivalence,  either because $\cR$ is a g\"odelian T-similarity relation on $\Sigma$ or  a T-similarity relation for a cut value $0<\cut \le 1$ such that $\mu\otimes\mu=\mu$,  then the {\em fuzzy derivatives} become {\em ordinary derivatives}, when we pass to the quotient alphabet, {\em i.e.}, once letters are identified up to
 $\cut$-similarity. The effect of differentiating with respect to $a$ is the same as
-differentiating with respect to the class $[a]_\cut$. First we need to define quotients.
+differentiating with respect to the class $[a]_\cut$. 
+To see this we need first to define quotients.
 
 
 \begin{definition}\label{def:quotient-language-fuzzy}
@@ -649,7 +639,7 @@ For a language $ L \subseteq \Sigma^*$, define its quotient image by
 
 \noindent
 The map $q_\cut$ maps each symbol to its $\cut$-equivalence class. The map
-$q_\cut^*$ does exactly the same thing for a whole word, letter by letter. We can now prove the following proposition.
+$q_\cut^*$ extends it to a whole word, letter by letter. We can now prove the following proposition.
 
 
 
@@ -702,7 +692,7 @@ $\partial_{[a]_\cut}(\mathcal L^\cut)$ consists only of quotient words, and each
 such word has at least one representative in $\Sigma^*$.
 \end{proof}
 
-{\color{red}\begin{proposition} 
+\begin{proposition} 
 Let $\cR$ be a g\"odelian T-similarity relation on $\Sigma$ or just a T-similarity relation for a cut value $0 < \cut \le 1$ such that $\mu\otimes\mu=\mu$, moreover let $\mathcal{L}\subseteq\Sigma^*$ and $a\in\Sigma$, then:
 \[
  \mathcal L\bigl(\mathcal D_a^\cut( r)\bigr)
@@ -710,17 +700,22 @@ Let $\cR$ be a g\"odelian T-similarity relation on $\Sigma$ or just a T-similari
  \{w\in \Sigma^\star \mid q^\star_\mu(w)\in \mathcal L\bigl(\mathcal D_{[a]_\cut} [r]_\mu\bigr)\}= \]
 \[=\{w\in \Sigma^\star \mid q^\star_\mu(w)\in \partial_{[a]_\mu}(\mathcal L([r]_\mu)\}= \partial_a^\mu(\mathcal L(r))\]
 the counterexample in Remark~\ref{mismatch} provides an example where the inclusion is strict. 
-\end{proposition}}\vspace{1cm}
+\end{proposition}\vspace{1cm}
+
+\section{Discussion}
+\begin{itemize}
+\item Consider the crisp language $L$ given by the regular expression $(a_0+b)^* a_1\underbrace{(a_0+a_1+b)\ldots (a_0+a_1+b)}_{n-1}$. This is the language of words whose first occurrence of the symbol $a_1$ is $n$-symbol from the end. Suppose now that we reason up to similarity, \ie  that $\mathcal R(a_0,a_1))\geq \mu$ and is 0 otherwise among all the other symbols. Then $L^\mu$ is the “$n+1^{th}$-symbol-from-the-end” language, whse minimal DFA has $2^{n+1}$ states. Therefore contrary to intuition, matching up to a similarity can be much harder than exact matching. Fuzzy reasining amounts to a form of non-determinism.
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Formalization in Rocq}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Comparison with Related Work (tentative)}
+\section{Comparison with Related Work}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Since the introduction of fuzzy automata by Santos~\cite{Santos68} and Wee~\cite{Wee67,WeeFu69} in the late 1960s, many authors have addressed the topic of fuzzifying the theory of regular languages. Most of these approaches have taken the standard view of fuzzy sets as functions in some lattice-ordered monoid. In an important line of research, see \cite{LP06,SC12,GJT17}, fuzzification of regular expressions is achieved by introducing a scalar $\lambda\in \mathcal L$ to the algebra of regular expressions with the intended meaning that membership in the induced language is multiplied by $\lambda$. Our approach is somewhat different, since we have taken a more quantitative and metric view, placing the notion of similarity in the forefront.
+Since the introduction of fuzzy automata by Santos~\cite{Santos68} and Wee~\cite{Wee67,WeeFu69} in the late 1960s, many authors have addressed the topic of fuzzifying the theory of regular languages. Most of these approaches have taken the standard view of fuzzy sets as functions in some lattice-ordered monoid, or quantale. In an important line of research, see \cite{LP06,SC12,GJT17}, fuzzification of regular expressions is achieved by introducing a scalar $\lambda\in \mathcal L$ to the algebra of regular expressions with the intended meaning that membership in the induced language is multiplied by $\lambda$. Our approach is somewhat different, since we have taken a more quantitative and metric view, placing the notion of similarity in the forefront.
 
 Nevertheless the two approaches can be related as follows, taking $\mathcal L$ to be just [0,1]. Given a crisp alphabet $\Sigma$, where similarity between characters is 0, we may introduce for each $a\in \Sigma$ new alphabet symbols $a^\lambda$ for $\lambda\in [0,1]$, with the intended meaning that $a^1$ stands for $a$, and define a similarity relation as follows\\
 $\mathcal R^\lambda(a_1,a_2)=\begin{cases} \lambda_1 \otimes \lambda_2& \mbox{ if } a_1=a^{\lambda_1} \mbox{ and } a_2=a^{\lambda_2} \\
@@ -739,6 +734,8 @@ One can prove that the following holds, using the notation in \cite{SC12}.
 \begin{proposition} Let $\alpha \in \mathcal R \mathcal L$. Then, for all $\mu$, we have that if $||\alpha ||(a_1\ldots a_n)\geq \mu$ then there exist $\lambda_1,\ldots, \lambda_n$ such that $\lambda_1\otimes \ldots \otimes \lambda_n\geq \lambda$ and $a_1^{\lambda_1}\ldots a_n^{\lambda_n}\in \mathcal L(r^{\alpha,1})$;
 %\item given $\alpha\in \mathcal{LR}$ denote by $\overline{\alpha}$ the regular expression where all scalars are erased, \ie taken to be 1, then $\mathcal R^E(\overline{\alpha}, r^{\alpha,\lambda})$
 \end{proposition}
+\subsection{Dirctions for Future Work}
+Extend all results to quantales. The case of complete Heyting Algebras appears to be particularly pleasing since the tensor is always idempotent. 
 
 \appendix
 \section{Notions in Fuzzy logic}
@@ -1176,4 +1173,21 @@ $\mathcal{L}^\cut_\Sigma(r)$ holds exactly when $w\in\mathcal{L}^\cut_\Sigma(r)$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 {\color{red}\begin{remark} The transition function on the quotient automaton can be viewed as a fuzzy transition. Namely if $[\ ]$ is defined by $\mu$-similarity, we can write $\delta(q_1,[a])=q_2$ as $((q_1,a),q_2)\in_\mu \delta$, where $\varepsilon$ is fuzzy set membership with value $\mu$. 
 \end{remark}}
+
+{\color{red}Notice that we have also the following: 
+\begin{proposition}\label{prop:cut-equivalence-notice}
+Let $\cR^\mu$ be an equivalence.
+\begin{enumerate}
+%\item The relation $ a \sim_\cut^\Sigma b \quad\Longleftrightarrow\quad \cR(a,b)\ge \cut.$ is an equivalence relation on $\Sigma$. 
+%\item The relation $ r\sim_\cut^E s\quad\Longleftrightarrow\quad\mathcal R^E(r,s)\ge\cut$ is an equivalence relation on restricted regular expressions.
+\item The relation $
+  w_1\sim_\cut^{\Sigma^*}w_2
+  \quad\Longleftrightarrow\quad
+  \mathcal R^w(w_1,w_2)\ge(\cut)^{|w_1|} $
+ is an equivalence relation on words, which naturally induces an equivalence relation on languages, $
+  L_1\sim_\cut^{\mathcal P(\Sigma^*)}L_2$.
+\end{enumerate}
+\end{proposition}
+} 
+
 
