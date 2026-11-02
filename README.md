@@ -54,10 +54,14 @@ The following table maps the main definitions, lemmas, propositions, and theorem
 
 | Paper item | Rocq formalization |
 |---|---|
-| Definition (Appendix): T-norm | `coq/src/SimilarityRelations.v`, record `tnorm`; supporting proofs `tn_mono_r`, `tn_mono2`, `tn_idem_le` |
+| Definition (Appendix): T-norm (left-continuous) | `coq/src/SimilarityRelations.v`, record `tnorm` (left-continuity: field `tn_lcont`); supporting proofs `tn_mono_r`, `tn_mono2`, `tn_idem_le`, `tn_le_l`, `tn_le_r`, `tn_0l`, `tn_0r`, `tn_shuffle`, `tn_idem_min` |
 | Definition: Fuzzy relation, cut, T-similarity, Gödelian | `coq/src/SimilarityRelations.v`, definitions `fuzzy_rel`, `cut_value`, `mu_cut`, `is_T_similarity`, `is_godelian` |
 | Lemma: μ-cuts of T-similarity relations are equivalences | `coq/src/SimilarityRelations.v`, proofs `T_equivalence_idem` (item 1), `T_equivalence_godelian` (item 2) |
 | Definition: T-similarity on Regular Expressions - General T-norm | `coq/src/SimilarityRelations.v`, definition `RE`; star clause via `tpow`, `InfN`; clause equations `RE_refl`, `RE_Char`, `RE_Alt`, `RE_Seq`, `RE_Star`, `RE_otherwise`; supporting proofs `RE_range`, `InfN_lower`, `InfN_greatest` |
+| Definition: T-similarity on Words - General T-norm | `coq/src/SimilarityRelations.v`, definition `RwT`; supporting proof `RwT_range` |
+| Definition: T-similarity on languages - General T-norm | `coq/src/SimilarityRelations.v`, definition `RLT`, built from `supRwT` and `hausRwT` (the second infimum is taken over `R^w(w2,w1)`, which equals `R^w(w1,w2)` by `RwT_sym`) |
+| Lemma: `R^E`, `R^w`, `R^L` are T-similarities | `coq/src/SimilarityRelations.v`, theorems `RE_is_T_similarity` (item 1, on all of E), `RwT_is_T_similarity` (item 2), `RLT_is_T_similarity` (item 3); supporting proofs `RE_sym`, `RE_trans`, `RE_trans_degenerate`, `RwT_refl`, `RwT_sym`, `RwT_trans`, `hausRwT_refl`, `hausRwT_trans`, `tn_supRwT` (uses left-continuity), `tpow_mono`, `tpow_T` |
+| Lemma: Gödelian transfer to `R^w`, `R^E`, `R^L` | `coq/src/SimilarityRelations.v`, theorems `RwT_godelian`, `RE_godelian`, `RLT_godelian` (for a finite alphabet, the paper's standing assumption); supporting proofs `RE_01`, `tpow_idem`, `InfN_tpow_idem`, `finite_max`, `finite_min`, `SupL_attained`, `InfL_attained`, `RLT_values_spec`, `RLT_in_values` |
 | Lemma: positive `R^E` forces a common skeleton | `coq/src/SimilarityRelations.v`, theorem `RE_pos_skeleton`; definitions `skeleton`, `holes`, `fill`; supporting proofs `RE_pos_skel_of`, `fill_skel_of`, `size_syms_of`, `tn_pos` |
 | Lemma: Finite Syntactic Similarity | `coq/src/SimilarityRelations.v`, theorem `RE_nonzero_finite`; definition `sym_seqs`; supporting proofs `sym_seqs_complete`, `In_map_mem`, `RE_pos_skel_of` |
 

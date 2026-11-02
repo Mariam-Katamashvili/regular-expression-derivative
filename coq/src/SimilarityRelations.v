@@ -128,8 +128,8 @@ Module SimilarityRelations (X : SYM).
   (* Definition A.2: T-norm                                       *)
   (* ============================================================ *)
 
-  (* A T-norm is an operation on [0,1]; on simval = R its laws are
-     required only for arguments in [0,1]. *)
+  (* A left-continuous T-norm is an operation on [0,1]; on simval = R
+     its laws are required only for arguments in [0,1]. *)
   Record tnorm : Type := TNorm {
     tn_op :> simval -> simval -> simval;
     tn_in01  : forall x y, in01 x -> in01 y -> in01 (tn_op x y);
@@ -138,7 +138,10 @@ Module SimilarityRelations (X : SYM).
       tn_op (tn_op x y) z = tn_op x (tn_op y z);
     tn_mono  : forall x y z, in01 x -> in01 y -> in01 z ->
       x <= y -> tn_op x z <= tn_op y z;
-    tn_unit  : forall x, in01 x -> tn_op x 1 = x
+    tn_unit  : forall x, in01 x -> tn_op x 1 = x;
+    (* left-continuity: x ⊗ y = sup_{z<y} x ⊗ z for y > 0 *)
+    tn_lcont : forall x y m, in01 x -> in01 y -> 0 < y ->
+      (forall z, 0 <= z < y -> tn_op x z <= m) -> tn_op x y <= m
   }.
 
   Section TNormFacts.
@@ -172,30 +175,83 @@ Module SimilarityRelations (X : SYM).
       exact H.
     Qed.
 
+    Lemma tn_le_l (x y : simval) : in01 x -> in01 y -> T x y <= x.
+    Proof.
+      move=> Hx Hy.
+      have H1 : in01 1 by split; lra.
+      apply: (Rle_trans _ (T x 1)).
+      - apply: (@tn_mono_r y 1 x Hy H1 Hx).
+        by case: Hy.
+      - rewrite (@tn_unit T x Hx).
+        exact: Rle_refl.
+    Qed.
+
+    Lemma tn_le_r (x y : simval) : in01 x -> in01 y -> T x y <= y.
+    Proof.
+      move=> Hx Hy.
+      rewrite (@tn_comm T x y Hx Hy).
+      exact: tn_le_l.
+    Qed.
+
+    (* 0 is absorbing: 0 ⊗ x = 0. *)
+    Lemma tn_0l (x : simval) : in01 x -> T 0 x = 0.
+    Proof.
+      move=> Hx.
+      have H0 : in01 0 by split; lra.
+      have [Hlo _] := @tn_in01 T 0 x H0 Hx.
+      have := tn_le_l H0 Hx.
+      lra.
+    Qed.
+
+    Lemma tn_0r (x : simval) : in01 x -> T x 0 = 0.
+    Proof.
+      move=> Hx.
+      have H0 : in01 0 by split; lra.
+      rewrite (@tn_comm T x 0 Hx H0).
+      exact: tn_0l.
+    Qed.
+
+    (* (x ⊗ y) ⊗ (z ⊗ u) = (x ⊗ z) ⊗ (y ⊗ u) *)
+    Lemma tn_shuffle (x y z u : simval) :
+      in01 x -> in01 y -> in01 z -> in01 u ->
+      T (T x y) (T z u) = T (T x z) (T y u).
+    Proof.
+      move=> Hx Hy Hz Hu.
+      have Hzu := @tn_in01 T z u Hz Hu.
+      have Hyu := @tn_in01 T y u Hy Hu.
+      rewrite (@tn_assoc T x y _ Hx Hy Hzu) (@tn_assoc T x z _ Hx Hz Hyu).
+      rewrite -(@tn_assoc T y z u Hy Hz Hu) (@tn_comm T y z Hy Hz).
+      by rewrite (@tn_assoc T z y u Hz Hy Hu).
+    Qed.
+
+    (* on idempotents, ⊗ is min: x ⊗ y is x or y *)
+    Lemma tn_idem_min (x y : simval) :
+      in01 x -> in01 y -> T x x = x -> T y y = y -> T x y = x \/ T x y = y.
+    Proof.
+      move=> Hx Hy Hxx Hyy.
+      case: (Rle_dec x y) => Hxy.
+      - left.
+        apply: Rle_antisym; [exact: tn_le_l | exact: (tn_idem_le Hx Hy Hxx Hxy)].
+      - right.
+        have Hyx : y <= x by apply: Rlt_le; exact: Rnot_le_lt.
+        apply: Rle_antisym; first exact: tn_le_r.
+        rewrite (@tn_comm T x y Hx Hy).
+        exact: (tn_idem_le Hy Hx Hyy Hyx).
+    Qed.
+
     (* x ⊗ y > 0 forces x > 0 and y > 0. *)
     Lemma tn_pos (x y : simval) :
       in01 x -> in01 y -> 0 < T x y -> 0 < x /\ 0 < y.
     Proof.
       move=> Hx Hy Hpos.
-      have H0 : in01 0 by split; lra.
-      have H1 : in01 1 by split; lra.
-      have Hz : forall z, in01 z -> T 0 z <= 0.
-      { move=> z Hz.
-        apply: (Rle_trans _ (T 0 1)).
-        - apply: (@tn_mono_r z 1 0 Hz H1 H0).
-          by case: Hz.
-        - rewrite (@tn_unit T 0 H0).
-          exact: Rle_refl. }
       have [Hx0 _] := Hx.
       have [Hy0 _] := Hy.
       split.
       - case: (Rle_lt_or_eq_dec 0 x Hx0) => // Hx_eq.
-        rewrite -Hx_eq in Hpos.
-        have := Hz y Hy.
+        rewrite -Hx_eq (tn_0l Hy) in Hpos.
         lra.
       - case: (Rle_lt_or_eq_dec 0 y Hy0) => // Hy_eq.
-        rewrite -Hy_eq (@tn_comm T x 0 Hx H0) in Hpos.
-        have := Hz x Hx.
+        rewrite -Hy_eq (tn_0r Hx) in Hpos.
         lra.
     Qed.
   End TNormFacts.
@@ -1875,6 +1931,26 @@ Module SimilarityRelations (X : SYM).
       split; lra.
     Qed.
 
+    Lemma tpow_mono (n : nat) (x y : simval) :
+      in01 x -> in01 y -> x <= y -> tpow n x <= tpow n y.
+    Proof.
+      move=> Hx Hy Hxy.
+      elim: n => [|n IH] /=; first exact: Rle_refl.
+      exact: (@tn_mono2 T x y (tpow n x) (tpow n y)
+                Hx Hy (tpow_in01 n Hx) (tpow_in01 n Hy) Hxy IH).
+    Qed.
+
+    (* ⊗^n (x ⊗ y) = ⊗^n x ⊗ ⊗^n y *)
+    Lemma tpow_T (n : nat) (x y : simval) :
+      in01 x -> in01 y -> tpow n (T x y) = T (tpow n x) (tpow n y).
+    Proof.
+      move=> Hx Hy.
+      elim: n => [|n IH] /=.
+      - rewrite tn_unit //; split; lra.
+      - by rewrite IH (@tn_shuffle T x y (tpow n x) (tpow n y)
+                         Hx Hy (tpow_in01 n Hx) (tpow_in01 n Hy)).
+    Qed.
+
     Lemma InfN_tpow_in01 (x : simval) :
       in01 x -> in01 (InfN (fun n => tpow n x)).
     Proof.
@@ -1898,6 +1974,25 @@ Module SimilarityRelations (X : SYM).
       - exact: (InfN_lower 1 H0).
       - rewrite /= (@tn_unit T x Hx).
         lra.
+    Qed.
+
+    Lemma tpow_idem (n : nat) (x : simval) :
+      in01 x -> T x x = x -> tpow n.+1 x = x.
+    Proof.
+      move=> Hx Hxx.
+      elim: n => [|n IH]; first exact: (@tn_unit T x Hx).
+      change (T x (tpow n.+1 x) = x).
+      by rewrite IH.
+    Qed.
+
+    (* inf_n ⊗^n x = x for an idempotent x *)
+    Lemma InfN_tpow_idem (x : simval) :
+      in01 x -> T x x = x -> InfN (fun n => tpow n x) = x.
+    Proof.
+      move=> Hx Hxx.
+      apply: Rle_antisym; first exact: InfN_tpow_le.
+      apply: InfN_greatest => -[|n]; first exact: (proj2 Hx).
+      exact: (Req_le _ _ (esym (tpow_idem n Hx Hxx))).
     Qed.
 
     Lemma InfN_tpow_one : InfN (fun n => tpow n 1) = 1.
@@ -1994,6 +2089,128 @@ Module SimilarityRelations (X : SYM).
       case: r => [| |a|r1 r2|r1 r2|r1|r1 r2|r1];
         case: s => [| |b|s1 s2|s1 s2|s1|s1 s2|s1] //= Hne _;
         by case: (regex_eq_dec _ _).
+    Qed.
+
+    (* ============================================================ *)
+    (* Lemma 3.3(1): R^E is a T-similarity                          *)
+    (* ============================================================ *)
+
+    Lemma RE_sym (r s : regex) : RE r s = RE s r.
+    Proof.
+      have Hdec : forall r' s' : regex,
+        (if regex_eq_dec r' s' then 1 else 0) =
+        (if regex_eq_dec s' r' then 1 else 0 : simval).
+      { move=> r' s'.
+        case: (regex_eq_dec r' s') => [E|H];
+          case: (regex_eq_dec s' r') => [E'|H'] //.
+        - exfalso; exact: H' (esym E).
+        - exfalso; exact: H (esym E'). }
+      elim: r s => [| |a|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                     [| |b|s1 s2|s1 s2|s1|s1 s2|s1];
+        try by rewrite !RE_otherwise.
+      - by [].
+      - by [].
+      - by rewrite !RE_Char (prox_sym (tsim_prox R_tsim)).
+      - by rewrite !RE_Alt IH1 IH2 smin_comm.
+      - by rewrite !RE_Seq IH1 IH2 (@tn_comm T _ _ (RE_range _ _) (RE_range _ _)).
+      - by rewrite !RE_Star IH1.
+      - rewrite /=; exact: Hdec.
+      - rewrite /=; exact: Hdec.
+    Qed.
+
+    (* transitivity when r1, r, r2 do not share a head of Definition 3.5 *)
+    Lemma RE_trans_degenerate (r1 r2 r : regex) :
+      ~~ (same_head r1 r && same_head r r2) ->
+      T (RE r1 r) (RE r r2) <= RE r1 r2.
+    Proof.
+      move=> Hh.
+      have H1 : in01 1 by split; lra.
+      case: (regex_eq_dec r1 r) => [<-|Hne1].
+      { rewrite RE_refl (@tn_comm T 1 _ H1 (RE_range _ _)).
+        rewrite (@tn_unit T _ (RE_range _ _)).
+        exact: Rle_refl. }
+      case: (regex_eq_dec r r2) => [<-|Hne2].
+      { rewrite RE_refl (@tn_unit T _ (RE_range _ _)).
+        exact: Rle_refl. }
+      have [H0 _] := RE_range r1 r2.
+      case/nandP: Hh => Hh.
+      - by rewrite (RE_otherwise Hne1 Hh) (@tn_0l T _ (RE_range _ _)).
+      - by rewrite (RE_otherwise Hne2 Hh) (@tn_0r T _ (RE_range _ _)).
+    Qed.
+
+    Lemma RE_trans (r1 r2 r : regex) : T (RE r1 r) (RE r r2) <= RE r1 r2.
+    Proof.
+      elim: r1 r2 r => [| |a|p1 IH1 p2 IH2|p1 IH1 p2 IH2|p1 IH1|p1 IH1 p2 IH2|p1 IH1]
+                         r2 r;
+        case: r => [| |b|s1 s2|s1 s2|s1|s1 s2|s1];
+        case: r2 => [| |c|t1 t2|t1 t2|t1|t1 t2|t1];
+        try by apply: RE_trans_degenerate.
+      - rewrite !RE_Char.
+        exact: (tsim_trans R_tsim).
+      - rewrite !RE_Alt.
+        apply: le_smin.
+        + apply: (Rle_trans _ (T (RE p1 s1) (RE s1 t1))); last exact: IH1.
+          apply: (@tn_mono2 T);
+            try apply: smin_in01; try apply: RE_range; exact: smin_lel.
+        + apply: (Rle_trans _ (T (RE p2 s2) (RE s2 t2))); last exact: IH2.
+          apply: (@tn_mono2 T);
+            try apply: smin_in01; try apply: RE_range; exact: smin_ler.
+      - rewrite !RE_Seq (@tn_shuffle T _ _ _ _ (RE_range _ _) (RE_range _ _)
+                                             (RE_range _ _) (RE_range _ _)).
+        apply: (@tn_mono2 T);
+          try apply: tn_in01; try apply: RE_range; [exact: IH1 | exact: IH2].
+      - rewrite !RE_Star.
+        have Hx := RE_range p1 s1.
+        have Hy := RE_range s1 t1.
+        have H0 : forall v, in01 v -> forall k, 0 <= tpow k v.
+        { move=> v Hv k. by case: (tpow_in01 k Hv). }
+        apply: InfN_greatest => k.
+        apply: (Rle_trans _ (T (tpow k (RE p1 s1)) (tpow k (RE s1 t1)))).
+        + apply: (@tn_mono2 T _ _ _ _ (InfN_tpow_in01 Hx) (tpow_in01 k Hx)
+                                      (InfN_tpow_in01 Hy) (tpow_in01 k Hy)).
+          * exact: (InfN_lower k (H0 _ Hx)).
+          * exact: (InfN_lower k (H0 _ Hy)).
+        + rewrite -(tpow_T k Hx Hy).
+          exact: (tpow_mono k (@tn_in01 T _ _ Hx Hy) (RE_range _ _) (IH1 t1 s1)).
+    Qed.
+
+    (* Lemma 3.3(1), on all of E *)
+    Theorem RE_is_T_similarity : is_T_similarity T RE.
+    Proof.
+      split.
+      - exact: RE_range.
+      - split; [exact: RE_refl | exact: RE_sym].
+      - exact: RE_trans.
+    Qed.
+
+    (* outside the clauses of Definition 3.5, R^E is 0 or 1 *)
+    Lemma RE_01 (r s : regex) : ~~ same_head r s -> RE r s = 0 \/ RE r s = 1.
+    Proof.
+      move=> Hh.
+      case: (regex_eq_dec r s) => [<-|Hne]; first by right; exact: RE_refl.
+      left; exact: RE_otherwise.
+    Qed.
+
+    (* Lemma 3.4, R^E *)
+    Theorem RE_godelian : is_godelian T R -> is_godelian T RE.
+    Proof.
+      move=> Hg r s.
+      have H0 : in01 0 by split; lra.
+      have H1 : in01 1 by split; lra.
+      have H01 : forall x, x = 0 \/ x = 1 -> x = T x x.
+      { move=> x [->|->];
+          [by rewrite (@tn_0l T 0 H0) | by rewrite (@tn_unit T 1 H1)]. }
+      elim: r s => [| |a|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                     [| |b|s1 s2|s1 s2|s1|s1 s2|s1];
+        try by apply: H01; apply: RE_01.
+      - rewrite RE_Char; exact: Hg.
+      - rewrite RE_Alt /smin.
+        case: (Rle_dec _ _) => Hle; [exact: IH1 | exact: IH2].
+      - rewrite RE_Seq (@tn_shuffle T _ _ _ _ (RE_range r1 s1) (RE_range r2 s2)
+                                               (RE_range r1 s1) (RE_range r2 s2)).
+        by rewrite -IH1 -IH2.
+      - rewrite RE_Star (InfN_tpow_idem (RE_range r1 s1) (esym (IH1 s1))).
+        exact: IH1.
     Qed.
 
     (* ============================================================ *)
@@ -2157,5 +2374,413 @@ Module SimilarityRelations (X : SYM).
     End FiniteSyntacticSimilarity.
 
   End GeneralRegexSimilarity.
+
+  (* ============================================================ *)
+  (* Definition 3.2 (R^w), general T-norm                         *)
+  (* ============================================================ *)
+
+  Section GeneralWordLanguageSimilarity.
+
+    Variable T : tnorm.
+    Variable R : fuzzy_rel A.
+    Hypothesis R_tsim : is_T_similarity T R.
+
+    Let R_range : forall a b, in01 (R a b) := tsim_range R_tsim.
+    Let R_refl : forall a, R a a = 1 := prox_refl (tsim_prox R_tsim).
+    Let R_sym : forall a b, R a b = R b a := prox_sym (tsim_prox R_tsim).
+
+    (* ⊗_i R(a_i,b_i) on words of equal length, 0 otherwise *)
+    Fixpoint RwT (w1 w2 : word) : simval :=
+      match w1, w2 with
+      | [::], [::] => 1
+      | a1 :: t1, a2 :: t2 => T (R a1 a2) (RwT t1 t2)
+      | _, _ => 0
+      end.
+
+    Lemma RwT_range (w1 w2 : word) : in01 (RwT w1 w2).
+    Proof.
+      have H0 : in01 0 by split; lra.
+      have H1 : in01 1 by split; lra.
+      elim: w1 w2 => [|a1 t1 IH] [|a2 t2] //=.
+      exact: (@tn_in01 T _ _ (R_range a1 a2) (IH t2)).
+    Qed.
+
+    (* ============================================================ *)
+    (* Lemma 3.3(2): R^w is a T-similarity                          *)
+    (* ============================================================ *)
+
+    Lemma RwT_refl (w : word) : RwT w w = 1.
+    Proof.
+      elim: w => [|a w IH] //=.
+      rewrite R_refl IH tn_unit //; split; lra.
+    Qed.
+
+    Lemma RwT_sym (w1 w2 : word) : RwT w1 w2 = RwT w2 w1.
+    Proof.
+      elim: w1 w2 => [|a1 t1 IH] [|a2 t2] //=.
+      by rewrite R_sym IH.
+    Qed.
+
+    Lemma RwT_trans (w1 w2 w : word) : T (RwT w1 w) (RwT w w2) <= RwT w1 w2.
+    Proof.
+      have H0 : in01 0 by split; lra.
+      have H1 : in01 1 by split; lra.
+      elim: w1 w2 w => [|a1 t1 IH] [|a2 t2] [|a t] /=.
+      - rewrite (@tn_unit T 1 H1); exact: Rle_refl.
+      - rewrite (@tn_0l T 0 H0); lra.
+      - rewrite (@tn_0r T 1 H1); exact: Rle_refl.
+      - rewrite (@tn_0l T (T (R a a2) (RwT t t2)) (RwT_range (a :: t) (a2 :: t2))).
+        exact: Rle_refl.
+      - rewrite (@tn_0l T 1 H1); exact: Rle_refl.
+      - rewrite (@tn_0r T (T (R a1 a) (RwT t1 t)) (RwT_range (a1 :: t1) (a :: t))).
+        exact: Rle_refl.
+      - rewrite (@tn_0l T 0 H0).
+        by case: (RwT_range (a1 :: t1) (a2 :: t2)).
+      - rewrite (@tn_shuffle T _ _ _ _ (R_range a1 a) (RwT_range t1 t)
+                                       (R_range a a2) (RwT_range t t2)).
+        apply: (@tn_mono2 T _ _ _ _
+                  (@tn_in01 T _ _ (R_range a1 a) (R_range a a2)) (R_range a1 a2)
+                  (@tn_in01 T _ _ (RwT_range t1 t) (RwT_range t t2))
+                  (RwT_range t1 t2)).
+        + exact: (tsim_trans R_tsim).
+        + exact: IH.
+    Qed.
+
+    (* Lemma 3.3(2) *)
+    Theorem RwT_is_T_similarity : is_T_similarity T RwT.
+    Proof.
+      split.
+      - exact: RwT_range.
+      - split; [exact: RwT_refl | exact: RwT_sym].
+      - exact: RwT_trans.
+    Qed.
+
+    (* ============================================================ *)
+    (* Definition 3.3 (R^L), general T-norm                         *)
+    (* ============================================================ *)
+
+    Lemma RwT_upper_bounded (w1 : word) (L : language) :
+      upper_bounded_on L (fun w2 => RwT w1 w2).
+    Proof. exists 1 => w2 _. by case: (RwT_range w1 w2). Qed.
+
+    (* sup_{w2 ∈ L} R^w(w1,w2) *)
+    Definition supRwT (w1 : word) (L : language) : simval :=
+      @SupL L (fun w2 => RwT w1 w2) (RwT_upper_bounded w1 L).
+
+    Lemma supRwT_in01 (w1 : word) (L : language) : in01 (supRwT w1 L).
+    Proof. apply: SupL_in01 => w2 _; exact: RwT_range. Qed.
+
+    Lemma supRwT_lower_bounded (L1 L2 : language) :
+      lower_bounded_on L1 (fun w1 => supRwT w1 L2).
+    Proof. exists 0 => w1 _. by case: (supRwT_in01 w1 L2). Qed.
+
+    (* inf_{w1 ∈ L1} sup_{w2 ∈ L2} R^w(w1,w2) *)
+    Definition hausRwT (L1 L2 : language) : simval :=
+      @InfL L1 (fun w1 => supRwT w1 L2) (supRwT_lower_bounded L1 L2).
+
+    (* Definition 3.3; the second infimum is taken over R^w(w2,w1),
+       which is R^w(w1,w2) by RwT_sym *)
+    Definition RLT (L1 L2 : language) : simval :=
+      smin (hausRwT L1 L2) (hausRwT L2 L1).
+
+    Lemma hausRwT_in01 (L1 L2 : language) : in01 (hausRwT L1 L2).
+    Proof. apply: InfL_in01 => w1 _; exact: supRwT_in01. Qed.
+
+    Lemma hausRwT_refl (L : language) : hausRwT L L = 1.
+    Proof.
+      case: (excluded_middle_informative (lang_nonempty L)) => [Hne|Hempty];
+        last exact: (@InfL_empty L _ _ Hempty).
+      apply: (@InfL_const_nonempty L _ _ _ Hne) => w Hw.
+      apply: Rle_antisym; first by case: (supRwT_in01 w L).
+      apply: (Rle_trans _ (RwT w w)); first by rewrite RwT_refl; exact: Rle_refl.
+      exact: (@SupL_upper L (fun w2 => RwT w w2) _ w Hw).
+    Qed.
+
+    (* if c <= sup_{w ∈ L} R^w(w1,w) and x ⊗ R^w(w1,w) <= m on L,
+       then x ⊗ c <= m; this is where left-continuity is used *)
+    Lemma tn_supRwT (x c m : simval) (w1 : word) (L : language) :
+      in01 x -> in01 c -> c <= supRwT w1 L -> 0 <= m ->
+      (forall w, L w = true -> T x (RwT w1 w) <= m) -> T x c <= m.
+    Proof.
+      move=> Hx Hc Hcs Hm H.
+      have [Hc0 Hc1] := Hc.
+      case: (Rle_lt_or_eq_dec 0 c Hc0) => [Hpos|<-];
+        last by rewrite (@tn_0r T x Hx).
+      apply: (@tn_lcont T x c m Hx Hc Hpos) => z [Hz0 Hzc].
+      case: (excluded_middle_informative (lang_nonempty L)) => [Hne|Hempty];
+        last first.
+      { have Heq : supRwT w1 L = 0 :=
+          @SupL_empty L _ (RwT_upper_bounded w1 L) Hempty.
+        lra. }
+      have [w [Hw Hzw]] :=
+        @SupL_nonempty_witness L (fun w => RwT w1 w) (RwT_upper_bounded w1 L)
+          z Hne (Rlt_le_trans _ _ _ Hzc Hcs).
+      apply: (Rle_trans _ (T x (RwT w1 w))); last exact: H.
+      apply: (@tn_mono_r T z (RwT w1 w) x _ (RwT_range w1 w) Hx);
+        [split; lra | lra].
+    Qed.
+
+    Lemma hausRwT_trans (L1 L2 L : language) :
+      T (hausRwT L1 L) (hausRwT L L2) <= hausRwT L1 L2.
+    Proof.
+      have Ha := hausRwT_in01 L1 L.
+      have Hb := hausRwT_in01 L L2.
+      case: (excluded_middle_informative (lang_nonempty L1)) => [Hne1|Hempty1];
+        last first.
+      { have -> : hausRwT L1 L2 = 1 := @InfL_empty L1 _ _ Hempty1.
+        by case: (@tn_in01 T _ _ Ha Hb). }
+      apply: (@InfL_greatest_nonempty L1 (fun w => supRwT w L2)
+                (supRwT_lower_bounded L1 L2) _ Hne1) => w1 Hw1.
+      have [Hm _] := supRwT_in01 w1 L2.
+      rewrite (@tn_comm T _ _ Ha Hb).
+      apply: (tn_supRwT Hb Ha
+                (@InfL_lower L1 (fun w => supRwT w L) (supRwT_lower_bounded L1 L)
+                   w1 Hw1) Hm) => w Hw.
+      have Hw1w := RwT_range w1 w.
+      rewrite (@tn_comm T _ _ Hb Hw1w).
+      apply: (tn_supRwT Hw1w Hb
+                (@InfL_lower L (fun w => supRwT w L2) (supRwT_lower_bounded L L2)
+                   w Hw) Hm) => w2 Hw2.
+      apply: (Rle_trans _ (RwT w1 w2)); first exact: RwT_trans.
+      exact: (@SupL_upper L2 (fun w2 => RwT w1 w2) _ w2 Hw2).
+    Qed.
+
+    (* ============================================================ *)
+    (* Lemma 3.3(3): R^L is a T-similarity                          *)
+    (* ============================================================ *)
+
+    Lemma RLT_range (L1 L2 : language) : in01 (RLT L1 L2).
+    Proof. exact: (smin_in01 (hausRwT_in01 L1 L2) (hausRwT_in01 L2 L1)). Qed.
+
+    Lemma RLT_refl (L : language) : RLT L L = 1.
+    Proof. by rewrite /RLT hausRwT_refl sminxx. Qed.
+
+    Lemma RLT_sym (L1 L2 : language) : RLT L1 L2 = RLT L2 L1.
+    Proof. by rewrite /RLT smin_comm. Qed.
+
+    Lemma RLT_trans (L1 L2 L : language) :
+      T (RLT L1 L) (RLT L L2) <= RLT L1 L2.
+    Proof.
+      rewrite /RLT.
+      apply: le_smin.
+      - apply: (Rle_trans _ (T (hausRwT L1 L) (hausRwT L L2)));
+          last exact: hausRwT_trans.
+        apply: (@tn_mono2 T);
+          try apply: smin_in01; try apply: hausRwT_in01; exact: smin_lel.
+      - apply: (Rle_trans _ (T (hausRwT L2 L) (hausRwT L L1)));
+          last exact: hausRwT_trans.
+        rewrite (@tn_comm T _ _ (hausRwT_in01 L2 L) (hausRwT_in01 L L1)).
+        apply: (@tn_mono2 T);
+          try apply: smin_in01; try apply: hausRwT_in01; exact: smin_ler.
+    Qed.
+
+    (* Lemma 3.3(3) *)
+    Theorem RLT_is_T_similarity : is_T_similarity T RLT.
+    Proof.
+      split.
+      - exact: RLT_range.
+      - split; [exact: RLT_refl | exact: RLT_sym].
+      - exact: RLT_trans.
+    Qed.
+
+    (* ============================================================ *)
+    (* Lemma 3.4: R^w and R^L inherit godelianity                   *)
+    (* ============================================================ *)
+
+    (* Lemma 3.4, R^w *)
+    Theorem RwT_godelian : is_godelian T R -> is_godelian T RwT.
+    Proof.
+      move=> Hg w1 w2.
+      have H0 : in01 0 by split; lra.
+      have H1 : in01 1 by split; lra.
+      elim: w1 w2 => [|a1 t1 IH] [|a2 t2] /=.
+      - by rewrite (@tn_unit T 1 H1).
+      - by rewrite (@tn_0l T 0 H0).
+      - by rewrite (@tn_0l T 0 H0).
+      - rewrite (@tn_shuffle T _ _ _ _ (R_range a1 a2) (RwT_range t1 t2)
+                                       (R_range a1 a2) (RwT_range t1 t2)).
+        by rewrite -Hg -IH.
+    Qed.
+
+    (* a nonempty set of reals inside a finite list has a maximum *)
+    Lemma finite_max (V : list simval) (S : simval -> Prop) :
+      (forall y, S y -> List.In y V) -> (exists y, S y) ->
+      exists y, S y /\ forall y', S y' -> y' <= y.
+    Proof.
+      elim: V S => [|v V IH] S HV [y Hy]; first by case: (HV y Hy).
+      case: (excluded_middle_informative (exists y', S y' /\ y' <> v))
+        => [Hne|Hno].
+      - have HV' : forall y', S y' /\ y' <> v -> List.In y' V.
+        { move=> y' [Hy' Hy'v].
+          case: (HV y' Hy') => // Hvy'.
+          by case: Hy'v. }
+        have [m [[Hm _] Hmax]] := IH _ HV' Hne.
+        case: (excluded_middle_informative (S v /\ m < v)) => [[Hv Hlt]|Hnot].
+        + exists v; split => // y' Hy'.
+          case: (excluded_middle_informative (y' = v)) => [->|Hy'v];
+            first exact: Rle_refl.
+          have := Hmax y' (conj Hy' Hy'v).
+          lra.
+        + exists m; split => // y' Hy'.
+          case: (excluded_middle_informative (y' = v)) => [Hy'v|Hy'v];
+            last exact: Hmax y' (conj Hy' Hy'v).
+          subst y'.
+          apply: Rnot_lt_le => Hlt.
+          exact: Hnot (conj Hy' Hlt).
+      - exists v; split.
+        + case: (excluded_middle_informative (y = v)) => [<- //|Hyv].
+          exfalso; exact: Hno (ex_intro _ y (conj Hy Hyv)).
+        + move=> y' Hy'.
+          case: (excluded_middle_informative (y' = v)) => [->|Hy'v];
+            first exact: Rle_refl.
+          exfalso; exact: Hno (ex_intro _ y' (conj Hy' Hy'v)).
+    Qed.
+
+    Lemma finite_min (V : list simval) (S : simval -> Prop) :
+      (forall y, S y -> List.In y V) -> (exists y, S y) ->
+      exists y, S y /\ forall y', S y' -> y <= y'.
+    Proof.
+      move=> HV [y Hy].
+      have HV' : forall y', S (- y') -> List.In y' (List.map Ropp V).
+      { move=> y' Hy'.
+        rewrite -(Ropp_involutive y').
+        apply: List.in_map.
+        exact: HV. }
+      have Hne' : exists y', S (- y') by exists (- y); rewrite Ropp_involutive.
+      have [m [Hm Hmax]] := finite_max HV' Hne'.
+      exists (- m); split => // y' Hy'.
+      have H := Hmax (- y').
+      rewrite Ropp_involutive in H.
+      have := H Hy'.
+      lra.
+    Qed.
+
+    Lemma SupL_attained (L : language) (f : word -> simval)
+          (Hub : upper_bounded_on L f) (V : list simval) :
+      lang_nonempty L -> (forall w, L w = true -> List.In (f w) V) ->
+      exists w, L w = true /\ @SupL L f Hub = f w.
+    Proof.
+      move=> Hne HV.
+      have HV' : forall y, lang_image L f y -> List.In y V.
+      { move=> y [w [Hw ->]]. exact: HV. }
+      have [y [[w [Hw Hy]] Hmax]] :=
+        finite_max HV' (@lang_image_nonempty L f Hne).
+      subst y.
+      exists w; split => //.
+      apply: Rle_antisym; last exact: (@SupL_upper L f Hub w Hw).
+      apply: (@SupL_least_nonempty L f Hub _ Hne) => w' Hw'.
+      apply: Hmax.
+      by exists w'.
+    Qed.
+
+    Lemma InfL_attained (L : language) (f : word -> simval)
+          (Hlb : lower_bounded_on L f) (V : list simval) :
+      lang_nonempty L -> (forall w, L w = true -> List.In (f w) V) ->
+      exists w, L w = true /\ @InfL L f Hlb = f w.
+    Proof.
+      move=> Hne HV.
+      have HV' : forall y, lang_image L f y -> List.In y V.
+      { move=> y [w [Hw ->]]. exact: HV. }
+      have [y [[w [Hw Hy]] Hmin]] :=
+        finite_min HV' (@lang_image_nonempty L f Hne).
+      subst y.
+      exists w; split => //.
+      apply: Rle_antisym; first exact: (@InfL_lower L f Hlb w Hw).
+      apply: (@InfL_greatest_nonempty L f Hlb _ Hne) => w' Hw'.
+      apply: Hmin.
+      by exists w'.
+    Qed.
+
+    Lemma mem_In (x : A) (l : seq A) : x \in l -> List.In x l.
+    Proof.
+      elim: l => [|y l IH]; first by rewrite in_nil.
+      rewrite in_cons => /orP [/eqP ->|/IH H]; by [left|right].
+    Qed.
+
+    Section FiniteGodelianTransfer.
+
+      (* a finite alphabet: [alphabet] lists every symbol *)
+      Variable alphabet : seq A.
+      Hypothesis alphabet_complete : forall a : A, a \in alphabet.
+      Hypothesis R_godelian : is_godelian T R.
+
+      (* every value of R^L is 0, 1 or some R(a,b) *)
+      Definition RLT_values : list simval :=
+        0 :: 1 :: List.flat_map (fun a => List.map (R a) alphabet) alphabet.
+
+      Lemma RLT_values_spec (v : simval) :
+        List.In v RLT_values -> in01 v /\ T v v = v.
+      Proof.
+        have H0 : in01 0 by split; lra.
+        have H1 : in01 1 by split; lra.
+        case=> [<-|[<-|/List.in_flat_map [a [_ /List.in_map_iff [b [<- _]]]]]].
+        - split => //; exact: (@tn_0l T 0 H0).
+        - split => //; exact: (@tn_unit T 1 H1).
+        - split; first exact: R_range.
+          by rewrite -R_godelian.
+      Qed.
+
+      Lemma R_in_values (a b : A) : List.In (R a b) RLT_values.
+      Proof.
+        right; right.
+        apply/List.in_flat_map; exists a; split;
+          first exact: (mem_In (alphabet_complete a)).
+        apply: List.in_map.
+        exact: (mem_In (alphabet_complete b)).
+      Qed.
+
+      Lemma RwT_in_values (w1 w2 : word) : List.In (RwT w1 w2) RLT_values.
+      Proof.
+        elim: w1 w2 => [|a1 t1 IH] [|a2 t2];
+          [by right; left | by left | by left |].
+        have -> : RwT (a1 :: t1) (a2 :: t2) = T (R a1 a2) (RwT t1 t2) by [].
+        have [Hx Hxx] := RLT_values_spec (R_in_values a1 a2).
+        have [Hy Hyy] := RLT_values_spec (IH t2).
+        case: (@tn_idem_min T _ _ Hx Hy Hxx Hyy) => ->;
+          [exact: R_in_values | exact: IH].
+      Qed.
+
+      Lemma supRwT_in_values (w1 : word) (L : language) :
+        List.In (supRwT w1 L) RLT_values.
+      Proof.
+        rewrite /supRwT.
+        case: (excluded_middle_informative (lang_nonempty L)) => [Hne|Hempty].
+        - have [w [_ ->]] :=
+            @SupL_attained L _ (RwT_upper_bounded w1 L) RLT_values Hne
+              (fun w _ => RwT_in_values w1 w).
+          exact: RwT_in_values.
+        - rewrite (@SupL_empty L _ (RwT_upper_bounded w1 L) Hempty).
+          by left.
+      Qed.
+
+      Lemma hausRwT_in_values (L1 L2 : language) :
+        List.In (hausRwT L1 L2) RLT_values.
+      Proof.
+        rewrite /hausRwT.
+        case: (excluded_middle_informative (lang_nonempty L1)) => [Hne|Hempty].
+        - have [w [_ ->]] :=
+            @InfL_attained L1 _ (supRwT_lower_bounded L1 L2) RLT_values Hne
+              (fun w _ => supRwT_in_values w L2).
+          exact: supRwT_in_values.
+        - rewrite (@InfL_empty L1 _ _ Hempty).
+          by right; left.
+      Qed.
+
+      Lemma RLT_in_values (L1 L2 : language) : List.In (RLT L1 L2) RLT_values.
+      Proof.
+        rewrite /RLT /smin.
+        case: (Rle_dec _ _) => Hle; exact: hausRwT_in_values.
+      Qed.
+
+      (* Lemma 3.4, R^L, for a finite alphabet *)
+      Theorem RLT_godelian : is_godelian T RLT.
+      Proof.
+        move=> L1 L2.
+        by have [_ ->] := RLT_values_spec (RLT_in_values L1 L2).
+      Qed.
+
+    End FiniteGodelianTransfer.
+
+  End GeneralWordLanguageSimilarity.
 
 End SimilarityRelations.

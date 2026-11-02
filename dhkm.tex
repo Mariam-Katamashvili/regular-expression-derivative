@@ -207,12 +207,12 @@ $\mu\otimes\mu=\mu$;
 \item $\mu$-cuts of G\"odelian T-similarity relations are equivalences.
 \end{enumerate}
 \end{lemma}
-{\color{blue}\begin{proof}
+\begin{proof}
 \begin{sloppypar}\raggedright
 Proved in \path{coq/src/SimilarityRelations.v}, theorems
 \path{T_equivalence_idem} and \path{T_equivalence_godelian}~\cite{OurRocqRepo}.
 \end{sloppypar}
-\end{proof}}
+\end{proof}
 
 Since all crisp equivalence relations are T-similarity relations for any norm, Lemma~\ref{T-equivalence} cannot be reversed. 
 
@@ -270,12 +270,12 @@ $$\mathcal{R}^E(r,s) = \begin{cases}1 & \mbox{ if } r=s; \\
 
 \begin{lemma} Let $r,s$ be restricted regular expressions over $\Sigma$, and let $\mathcal{R}$ be a T-similarity relation on $\Sigma$, then for all restricted regular expressions $r_1,r_2$ if $\mathcal{R}^E(r_1,r_2)\gneq 0$ then $r_1=r[a_1,\ldots,a_n] $ and $r_2=r[b_1,\ldots,b_n] $ for suitable choices of $r$ and $a_i$'s and $b_i$'s.
 \end{lemma}
-{\color{blue}\begin{proof}
+\begin{proof}
 \begin{sloppypar}\raggedright
 Proved in \path{coq/src/SimilarityRelations.v}, theorem
 \path{RE_pos_skeleton}~\cite{OurRocqRepo}.
 \end{sloppypar}
-\end{proof}}
+\end{proof}
 
 We can straightforwardly prove that all the above fuzzy relations are indeed T-similarities.
 \begin{lemma} \label{T-similarity}Given a T-similarity relation $\mathcal R$ on $\Sigma$ \begin{enumerate}
@@ -284,12 +284,23 @@ We can straightforwardly prove that all the above fuzzy relations are indeed T-s
 \item$\mathcal R^L$ is a T-similarity relation on languages.
 \end{enumerate}
 \end{lemma}
-{\color{red} Rocq proof ??}\vspace{0.5cm}
+\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/SimilarityRelations.v}, theorems
+\path{RE_is_T_similarity} (item 1), \path{RwT_is_T_similarity} (item 2) and
+\path{RLT_is_T_similarity} (item 3)~\cite{OurRocqRepo}.
+\end{sloppypar}
+\end{proof}
 
 {\begin{lemma}\label{lem:godelian-transfer}
 If $\cR$ is a g\"odelian T-similarity relation on $\Sigma$, then $\cR^w$, $\cR^E$ and $\cR^L$ are g\"odelian.
 \end{lemma}}
-{\color{red} Rocq proof?}\vspace{0.5cm}
+\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/SimilarityRelations.v}, theorems
+\path{RwT_godelian}, \path{RE_godelian} and \path{RLT_godelian}~\cite{OurRocqRepo}.
+\end{sloppypar}
+\end{proof}
 
 \noindent The semantic operator $\mathcal L$, see Setion~\ref{basic}   is naturally fuzzified as follows.
 \begin{definition}[Fuzzy semantic interpretation] For a restricted regular expression $r$ over $\Sigma$ and
@@ -331,12 +342,12 @@ We have in fact the following crucial lemma.
 \begin{lemma}[Finite Syntactic Similarity]\label{lemma:syntactic-similarity}
 If $\Sigma$ is finite, then for all $r$ the set $\{ s\mid \mathcal R^E(s,r)\neq 0\}$ is finite.
 \end{lemma}
-{\color{blue}\begin{proof}
+\begin{proof}
 \begin{sloppypar}\raggedright
 Proved in \path{coq/src/SimilarityRelations.v}, theorem
 \path{RE_nonzero_finite}~\cite{OurRocqRepo}.
 \end{sloppypar}
-\end{proof}}
+\end{proof}
 
 Finally notice that Theorem~\ref{thm:Rr-RL-bridge} fails for regular expressions when $\&$ and $\neg$ are
 allowed. These are simple counterexamples.
