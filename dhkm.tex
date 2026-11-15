@@ -60,7 +60,7 @@ A preliminary verion concerning the special case of the present work for the min
 \section{Basic Definitions}\label{basic}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-We use standard terminology: an \emph{alphabet} $\Sigma$ is a finite nonempty set of
+We use standard terminology: an \emph{alphabet} $\Sigma$ is a, possibly infinite,  nonempty set of
 \emph{symbols}, a \emph{word} is a finite sequence of symbols, $\varepsilon$ is the empty
 word, $\Sigma^*$ is the set of all words, and a \emph{language} is a subset of $\Sigma^*$.
 
@@ -188,14 +188,15 @@ $\cR_\cut := \{(s_1,s_2) \mid \cR(s_1,s_2) \ge \cut \}$;
 \item a fuzzy relation $\cR$ is a \emph{T-similarity relation}, with respect to a T-norm, $\otimes$, if for all $s,s_1,s_2$ it is {\em reflexive}, namely $\cR(s,s)=1$, {\em symmetric}, namely $\cR(s_1,s_2)=\cR(s_2,s_1)$, and satisfies the {\em reverse
 triangle inequality} with respect to $\otimes$, namely $\cR(s_1,s_2)\ge \cR(s_1,s) \otimes \cR(s,s_2)$;
 \item a T-similarity relation, $\cR$, is {\em extensional} if for all $s_1,s_2$, if $\cR(s_1,s_2)=1$ then $s_1=s_2$;
-\item A T-similarity relation $\cR$ is said to be {\em G\"odelian} if the T-norm, $\otimes$, is idempotent on all the values of the pairs in $\cR$, namely for all $s_1,s_2$ we have that $\cR(s_1,s_2)= \cR(s_1,s_2) \otimes \cR(s_1,s_2)$;
+\item A T-similarity relation $\cR$ is said to be {\em G\"odelian} if the T-norm, $\otimes$, if for all  values of the pairs in $\cR$, namely for all $s_1,s_2,s_3,s_4$ we have that $ \cR(s_1,s_2) \otimes \cR(s_3,s_4)=\min\{\cR(s_1,s_2), \cR(s_3,s_4)\}$;
 \end{enumerate}
 \end{definition} 
 
 Some comments are in order.
 \begin{enumerate}
+\item All definitions can be naturally extended to similarity relations taking values in integral commutative quantales \cite{}.
 \item The same fuzzy relation can be a T-similarity relation w.r.t. different norms; trivial examples are crisp equivalence relations. 
-\item Throughout the paper we assume that T-similarity relations are extensional, otherwise, without loss of generality, we can quotient the domain, $S$, of the fuzzy relation, $\cR$ up to the 1-cut $\cR^1$ which is an equivalence, and work on $S/\cR^1$. Hence throughout the paper we will assume that T-similarity relations are always extensional.
+\item Throughout the paper we assume that T-similarity relations are extensional, otherwise, without loss of generality, we can quotient the domain, $S$, of the fuzzy relation, $\cR$ up to the 1-cut $\cR^1$ which is an equivalence, and work on $S/\cR^1$. 
 \item G\"odel's {\em minimum T-norm}, see Definition~\ref{norms}.1, is obviously g\"odelian.
 \item The p-ordinal sums of G\"odel's and Goguen's T-norms, see Definition~\ref{norms}.4, give examples of T-norms which are idempotent for all values on $(0,p]$.
 \end{enumerate}
@@ -234,7 +235,7 @@ Given a T-similarity relation $\mathcal R^w$ on $\Sigma^*$, for languages $L_1,L
 \]
 \end{definition}
 
-Notice that $\mathcal R^L(\ ,\ )$ is essentially the definition of the reverse of the Hausdorff distance induced by taking as distance the reverse of $mathcal R^w(\ ,\ )$.
+Notice that $\mathcal R^L(\ ,\ )$ is essentially the definition of the reverse of the Hausdorff distance on sets induced by taking as ultrametric the reverse of $\mathcal R^w(\ ,\ )$.
 
 Viewing words as regular expressions, Definition~\ref{def:Rw} naturally extends to regular expressions, when the T-norm is globally idempotent \ie if we take G\"odel's minimum T-norm.
 \begin{definition}[T-similarity on Regular Expressions for G\"odel's T-norm] \label{def:Rexp}Let T be G\"odel's T-norm. Given a T-similarity relation $\mathcal R$ on $\Sigma$, define a fuzzy relation on regular expressions, $\mathcal{G}^{E}:E \times E \rightarrow [0,1]$, as follows
@@ -318,7 +319,7 @@ $0 < \cut \le 1$, its {\em fuzzy semantic interpretation} is the language $\math
 %\item {\color{red}$\mathcal{R}^L\bigl(L(r_1),L(r_2)\bigr)$ is bounded below by:
 %\[\mathcal{R}^L\bigl(L(r_1),L(r_2)\bigr)\geq\sup\Bigl\{\mathcal{R}^E(r_1',r_2')\;\Bigm|\; r_1',r_2' \in R^\Sigma,\; L(r_1')=L(r_1),\;L(r_2')=L(r_2)\Bigr\}.\]}
 \end{enumerate}
-Moreover if $\cR$ is a G\"odelian T-similarity relation, or $\mu\otimes\mu=\mu $, then $\mathcal R^E(r_1,r_2)\geq \mu$ then $L^\mu(r_1)=L^\mu(r_2)$;
+Moreover if $\cR$ is a G\"odelian T-similarity relation, or $\mu\otimes\mu=\mu $, then $\mathcal R^E(r_1,r_2)\geq \mu$ implies that $L^\mu(r_1)=L^\mu(r_2)$;
 \end{theorem}
 {\color{red} Rocq proof ??}\vspace{0.5cm}
 
@@ -458,7 +459,7 @@ $L\subseteq\Sigma^*$ a regular language, and $u\in\Sigma^*$. Then:
         finite.
 \end{enumerate}
 \end{theorem}
-{\begin{remark}\em  {\bf On the number of derivatives} If we were to take derivatives up to semantic equivalence, then we would get that the cardinality of the sets in Theorem~\ref{the:derivative}.3 and .4 would be equal. But even if we take derivatives only up to canonical form, this is not the case. For example, consider the restricted regular expressions $a^\star
+{\begin{remark}\em  {\bf On the number of derivatives}\ If we were to take derivatives up to semantic equivalence, then we would get that the cardinality of the sets in Theorem~\ref{the:derivative}.3 and .4 would be equal. But even if we take derivatives only up to canonical form, this is not the case. For example, consider the restricted regular expressions $a^\star
 +b(a+\varepsilon)^\star$, then we have that $\mathcal D_a=a^\star$ and $\mathcal D_b=(a+\varepsilon)^\star$, which are language equivalent. So we have that the cardinality of $\bigl\{\, \partial_{u}(L) \mid u \in \Sigma^\star \bigr\}$ is two, while that of $\bigl\{\, \mathcal D_{u}(L) \mid u \in \Sigma^\star \bigr\}$ is three.\end{remark}}
 {\color{red} We should compute an estimate on the number of syntactic derviatives up to canonicalization.}
 
@@ -518,7 +519,7 @@ recursively by
 \]
 for $a\in\Sigma$ and $v\in\Sigma^*$.
 \end{definition}
-\begin{remark} {\bf On the finitary nature of the syntactic definitions.}{\em Notice that both Definition~\ref{def:regex-fuzzy-derivative} and Definition~\ref{def:regex-fuzzy-word-derivative} are purely syntactic in that, by Lemma~\ref{lemma:syntactic-similarity}, the summands in the sums are finite. 
+\begin{remark} {\bf On the finitary nature of the syntactic definitions.}\ {\em Notice that both Definition~\ref{def:regex-fuzzy-derivative} and Definition~\ref{def:regex-fuzzy-word-derivative} the summands in the sums are finite, by Lemma~\ref{lemma:syntactic-similarity}, 
 In particular in Definition~\ref{def:regex-fuzzy-derivative}, the sum is finite because $\Sigma$ is finite
 and $\sim_\cut^E$ only varies the finitely many letters occurring in the fixed
 syntax tree of $r$. While in Definition~\ref{def:regex-fuzzy-word-derivative}, $\cut''$ ranges over the finite set $\Lambda_a(r)$ of nonzero values taken by $\cR(a,\cdot)\otimes\cR^E(\cdot,r)$ and $\cut'$ over $\Lambda_v(\mathcal D_a^{\cut''}(r))$, with $\Lambda_\varepsilon(r)=\{1\}$ and $\Lambda_{av}(r)=\{\cut'\otimes\cut''\mid \cut''\in\Lambda_a(r),\ \cut'\in\Lambda_v(\mathcal D_a^{\cut''}(r))\}$.
