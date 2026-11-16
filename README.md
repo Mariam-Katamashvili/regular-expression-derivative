@@ -80,8 +80,14 @@ The following table maps the main definitions, lemmas, propositions, and theorem
 | Theorem 4.1(3): `L(D_u(r)) = ∂_u(L(r))` | `coq/src/Derivatives.v`, theorem `D_correct`; supporting proof `D_char_correct` |
 | Theorem 4.1(4): syntactic finiteness up to canonicalization | todo |
 | Theorem 4.1(5): semantic finiteness | todo |
-| Definitions: `μ`-fuzzy semantic and syntactic derivatives, by a symbol and by a word | todo |
-| Theorem 4.2 (Main), items 1–6 | todo |
+| Definition 4.4: `μ`-fuzzy semantic derivative `∂_a^μ(L)` | `coq/src/FuzzyDerivatives.v`, definition `fdlang_char` |
+| Definition 4.5: `μ`-fuzzy syntactic derivative `D_a^μ(r)` | `coq/src/FuzzyDerivatives.v`, definition `Dmu_char` (a finite sum `sum_re` over the alphabet and `RE_candidates`); membership lemma `Dmu_charP` |
+| Definition 4.6: `μ`-fuzzy semantic derivative by a word `∂_u^μ(L)` | `coq/src/FuzzyDerivatives.v`, definition `fdlang` |
+| Definition 4.7: `μ`-fuzzy syntactic derivative by a word `D_u^μ(r)`, with the value sets `Λ` of the remark after it | `coq/src/FuzzyDerivatives.v`, definitions `Dmu`, `Lambda`, `Lambda_char`; lemmas `Dmu_consP`, `Lambda_charP`, `Lambda_in01` |
+| Theorem 4.2(1): experimentum crucis | todo |
+| Theorem 4.2(2): `D_a^μ(r)` is a regular expression | by construction: `Dmu_char` returns a `regex`; regularity of `∂_a^μ(L)` is todo |
+| Theorem 4.2(3): `L(D_a^μ(r)) ⊆ ∂_a^μ(L(r))` | `coq/src/FuzzyDerivatives.v`, theorem `Dmu_char_sound` (for every T-norm, on all of E) |
+| Theorem 4.2(4)–(6): finiteness and decidability | todo |
 | Proposition 4.1: `μ`-cuts of `R`, `R^E`, `R^w`, `R^L` are equivalences when `R` is Gödelian or `μ ⊗ μ = μ` | `coq/src/SimilarityRelations.v`, theorems `R_cut_equivalence` (item 1), `RE_cut_equivalence` (item 2, on all of E), `RwT_cut_equivalence` (item 3), `RLT_cut_equivalence` (item 4; the `μ ⊗ μ = μ` case for any alphabet is `RLT_cut_equivalence_idem`, the Gödelian case needs a finite alphabet) |
 | Proposition 4.2: simplified fuzzy derivatives when `μ`-cuts are equivalences | todo |
 | Definition: quotient alphabet `Σ^μ`, maps `q_μ`, `q_μ*`, quotient language `[L]_μ` | todo |

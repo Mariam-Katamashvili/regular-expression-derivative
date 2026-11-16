@@ -8,6 +8,7 @@ src/ExamplesCanonicize.v
 src/Derivatives.v
 src/DerivativeExamples.v
 src/SimilarityRelations.v
+src/FuzzyDerivatives.v
 src/CanonicalizationCorrectness.v
 src/Automata.v
 src/AutomataConstruction.v

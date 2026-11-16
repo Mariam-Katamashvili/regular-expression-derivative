@@ -1189,12 +1189,15 @@ Module SimilarityRelations (X : SYM).
         rewrite in_cons /= => /orP [/eqP ->|/IH H]; by [left|right].
       Qed.
 
-      (* Lemma 3.5, on all of E: only finitely many s have R^E(s,r) <> 0 *)
-      Theorem RE_nonzero_finite (r : regex) :
-        exists l : seq regex, forall s, RE s r <> 0 -> List.In s l.
+      (* the expressions with the skeleton of r: every s with R^E(s,r) <> 0
+         is one of them *)
+      Definition RE_candidates (r : regex) : seq regex :=
+        [seq fill (skel_of r) xs | xs <- sym_seqs (holes (skel_of r))].
+
+      Lemma RE_candidates_complete (r s : regex) :
+        RE s r <> 0 -> List.In s (RE_candidates r).
       Proof.
-        exists [seq fill (skel_of r) xs | xs <- sym_seqs (holes (skel_of r))].
-        move=> s Hs.
+        move=> Hs.
         have Hpos : 0 < RE s r.
         { case: (RE_range s r) => H0 _.
           apply: Rnot_le_lt => Hle.
@@ -1204,6 +1207,14 @@ Module SimilarityRelations (X : SYM).
         apply: In_map_mem.
         rewrite -Hsk -size_syms_of.
         exact: sym_seqs_complete.
+      Qed.
+
+      (* Lemma 3.5, on all of E: only finitely many s have R^E(s,r) <> 0 *)
+      Theorem RE_nonzero_finite (r : regex) :
+        exists l : seq regex, forall s, RE s r <> 0 -> List.In s l.
+      Proof.
+        exists (RE_candidates r).
+        exact: RE_candidates_complete.
       Qed.
 
     End FiniteSyntacticSimilarity.
