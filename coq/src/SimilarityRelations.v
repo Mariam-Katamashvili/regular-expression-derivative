@@ -2781,6 +2781,232 @@ Module SimilarityRelations (X : SYM).
 
     End FiniteGodelianTransfer.
 
+    (* ============================================================ *)
+    (* Theorem 3.1(1): R^E(r1,r2) <= R^L(L(r1),L(r2))               *)
+    (* ============================================================ *)
+
+    (* R^w(u1,v1) ⊗ R^w(u2,v2) <= R^w(u1 u2, v1 v2) *)
+    Lemma RwT_cat (u1 u2 v1 v2 : word) :
+      T (RwT u1 v1) (RwT u2 v2) <= RwT (u1 ++ u2) (v1 ++ v2).
+    Proof.
+      have H1 : in01 1 by split; lra.
+      have Huv2 := RwT_range u2 v2.
+      elim: u1 v1 => [|a1 t1 IH] [|b1 t2] /=.
+      - rewrite (@tn_comm T 1 _ H1 Huv2) (@tn_unit T _ Huv2).
+        exact: Rle_refl.
+      - rewrite (@tn_0l T _ Huv2).
+        exact: (proj1 (RwT_range u2 (b1 :: t2 ++ v2))).
+      - rewrite (@tn_0l T _ Huv2).
+        exact: (proj1 (RwT_range (a1 :: t1 ++ u2) v2)).
+      - rewrite (@tn_assoc T _ _ _ (R_range a1 b1) (RwT_range t1 t2) Huv2).
+        apply: (@tn_mono_r T _ _ _ (@tn_in01 T _ _ (RwT_range t1 t2) Huv2)
+                  (RwT_range (t1 ++ u2) (t2 ++ v2)) (R_range a1 b1)).
+        exact: IH.
+    Qed.
+
+    (* outside the clauses of Definition 3.5, w matches itself when r = s,
+       and R^E(r,s) = 0 otherwise *)
+    Lemma RE_witness_degenerate (r s : regex) (w : word) :
+      RS.den r w -> ~~ same_head r s ->
+      RE T R r s = 0 \/ exists u, RS.den s u /\ RE T R r s <= RwT w u.
+    Proof.
+      move=> Hw Hh.
+      case: (regex_eq_dec r s) => [<-|Hne]; last by left; exact: RE_otherwise.
+      right; exists w; split => //.
+      rewrite RE_refl RwT_refl.
+      exact: Rle_refl.
+    Qed.
+
+    (* every word w of L(r) has a partner u in L(s) with
+       R^E(r,s) <= R^w(w,u), unless R^E(r,s) = 0 *)
+    Lemma RE_witness (r s : regex) (w : word) :
+      RS.den r w ->
+      RE T R r s = 0 \/ exists u, RS.den s u /\ RE T R r s <= RwT w u.
+    Proof.
+      elim: r s w => [| |a|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                       s w Hw;
+        case: s => [| |b|s1 s2|s1 s2|s1|s1 s2|s1];
+        try by apply: RE_witness_degenerate.
+      - have -> : w = [:: a] by apply/eqP; exact: Hw.
+        right; exists [:: b]; split; first exact: eqxx.
+        rewrite (RE_Char R_tsim) /= (@tn_unit T _ (R_range a b)).
+        exact: Rle_refl.
+      - rewrite RE_Alt.
+        have [H01 _] := RE_range R_tsim r1 s1.
+        have [H02 _] := RE_range R_tsim r2 s2.
+        move/orP: Hw => [Hw1|Hw2].
+        + have [H0|[u [Hu Hle]]] := IH1 s1 w Hw1.
+          * by left; rewrite H0 smin0l.
+          * right; exists u; split; first by apply/orP; left.
+            exact: (Rle_trans _ _ _ (smin_lel _ _) Hle).
+        + have [H0|[u [Hu Hle]]] := IH2 s2 w Hw2.
+          * by left; rewrite H0 smin0r.
+          * right; exists u; split; first by apply/orP; right.
+            exact: (Rle_trans _ _ _ (smin_ler _ _) Hle).
+      - rewrite RE_Seq.
+        have Hx1 := RE_range R_tsim r1 s1.
+        have Hx2 := RE_range R_tsim r2 s2.
+        have [u1 [u2 [-> [Hu1 Hu2]]]] := Languages.concP (A:=A) Hw.
+        have [H0|[v1 [Hv1 Hle1]]] := IH1 s1 u1 Hu1.
+        { by left; rewrite H0 (@tn_0l T _ Hx2). }
+        have [H0|[v2 [Hv2 Hle2]]] := IH2 s2 u2 Hu2.
+        { by left; rewrite H0 (@tn_0r T _ Hx1). }
+        right; exists (v1 ++ v2); split.
+        + apply: (Languages.concP_inv (A:=A)).
+          by exists v1, v2.
+        + apply: (Rle_trans _ (T (RwT u1 v1) (RwT u2 v2))); last exact: RwT_cat.
+          exact: (@tn_mono2 T _ _ _ _ Hx1 (RwT_range u1 v1) Hx2 (RwT_range u2 v2)
+                    Hle1 Hle2).
+      - rewrite RE_Star.
+        have Hx := RE_range R_tsim r1 s1.
+        have Hpow : forall k, 0 <= tpow T k (RE T R r1 s1).
+        { move=> k; by case: (tpow_in01 T k Hx). }
+        have [xs [Hxs Hall]] := Languages.starP (A:=A) Hw.
+        (* the n blocks of a word of L(r1)* each match a word of L(s1) *)
+        have Hblocks :
+          forall zs,
+            Languages.all_in (RS.den r1) zs ->
+            RE T R r1 s1 = 0 \/
+            exists v, RS.star (RS.den s1) v /\
+                      tpow T (size zs) (RE T R r1 s1)
+                        <= RwT (Languages.flatten_words zs) v.
+        { elim=> [|z zs IHz] /=.
+          - move=> _; right; exists [::]; split;
+              first exact: (Languages.star_nil (A:=A) (RS.den s1)).
+            exact: Rle_refl.
+          - move=> /andP [Hz Hzs].
+            have [H0|[y [Hy Hzy]]] := IH1 s1 z Hz; first by left.
+            have [H0|[v [Hv Hzsv]]] := IHz Hzs; first by left.
+            right; exists (y ++ v); split; first exact: star_prepend_word.
+            apply: (Rle_trans _ (T (RwT z y) (RwT (Languages.flatten_words zs) v)));
+              last exact: RwT_cat.
+            exact: (@tn_mono2 T _ _ _ _ Hx (RwT_range z y) (tpow_in01 T _ Hx)
+                      (RwT_range _ v) Hzy Hzsv). }
+        have [H0|[v [Hv Hle]]] := Hblocks xs Hall.
+        + left.
+          have := InfN_tpow_le T Hx.
+          have := InfN_tpow_in01 T Hx.
+          rewrite /in01 H0.
+          lra.
+        + right; exists v; split; first exact: Hv.
+          rewrite -(Languages.splits_flatten Hxs).
+          exact: (Rle_trans _ _ _ (InfN_lower (size xs) Hpow) Hle).
+    Qed.
+
+    (* R^E(r,s) <= inf_{w ∈ L(r)} sup_{u ∈ L(s)} R^w(w,u) *)
+    Lemma RE_le_hausRwT (r s : regex) :
+      RE T R r s <= hausRwT (RS.den r) (RS.den s).
+    Proof.
+      case: (excluded_middle_informative (lang_nonempty (RS.den r)))
+        => [Hne|Hempty]; last first.
+      { have -> : hausRwT (RS.den r) (RS.den s) = 1 :=
+          @InfL_empty (RS.den r) _ _ Hempty.
+        by case: (RE_range R_tsim r s). }
+      apply: (@InfL_greatest_nonempty (RS.den r) (fun w => supRwT w (RS.den s))
+                (supRwT_lower_bounded (RS.den r) (RS.den s)) _ Hne) => w Hw.
+      have [H0|[u [Hu Hle]]] := RE_witness s Hw.
+      - rewrite H0.
+        by case: (supRwT_in01 w (RS.den s)).
+      - exact: (le_SupL_witness (RwT_upper_bounded w (RS.den s)) Hu Hle).
+    Qed.
+
+    (* Theorem 3.1(1), on all of E (and so on restricted regexes);
+       it holds for every T-norm, left-continuity is not used *)
+    Theorem RE_le_RLT (r1 r2 : regex) :
+      RE T R r1 r2 <= RLT (RS.den r1) (RS.den r2).
+    Proof.
+      rewrite /RLT.
+      apply: le_smin; first exact: RE_le_hausRwT.
+      rewrite (RE_sym R_tsim).
+      exact: RE_le_hausRwT.
+    Qed.
+
+    (* ============================================================ *)
+    (* Theorem 3.1, moreover: R^E(r1,r2) >= mu gives                *)
+    (* L^mu(r1) = L^mu(r2) when R is godelian or mu ⊗ mu = mu       *)
+    (* ============================================================ *)
+
+    (* Definition (fuzzy semantic interpretation):
+       L^mu(r) = {w | w ~_mu v for some v ∈ L(r)}, with ~_mu the mu-cut of R^w *)
+    Definition fuzzy_den (mu : simval) (r : regex) : word -> Prop :=
+      fun w => exists v, RS.den r v /\ mu_cut mu RwT w v.
+
+    Lemma RwT_cut_equivalence (mu : simval) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      Relation_Definitions.equivalence word (mu_cut mu RwT).
+    Proof.
+      move=> Hmu [Hg|Hidem].
+      - exact: (T_equivalence_godelian RwT_is_T_similarity (RwT_godelian Hg) Hmu).
+      - exact: (T_equivalence_idem RwT_is_T_similarity Hmu Hidem).
+    Qed.
+
+    Lemma fuzzy_den_sub (mu : simval) (r1 r2 : regex) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      mu <= RE T R r1 r2 ->
+      forall w, fuzzy_den mu r1 w -> fuzzy_den mu r2 w.
+    Proof.
+      move=> Hmu Hcase Hle w [v [Hv Hwv]].
+      have [_ Htrans _] := RwT_cut_equivalence Hmu Hcase.
+      have [H0|[u [Hu Hvu]]] := RE_witness r2 Hv.
+      - case: Hmu => Hmu0 _.
+        lra.
+      - exists u; split => //.
+        apply: (Htrans w v u Hwv).
+        exact: (Rle_trans _ _ _ Hle Hvu).
+    Qed.
+
+    (* Theorem 3.1, moreover part, on all of E *)
+    Theorem RE_cut_fuzzy_den_eq (mu : simval) (r1 r2 : regex) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      mu <= RE T R r1 r2 ->
+      forall w, fuzzy_den mu r1 w <-> fuzzy_den mu r2 w.
+    Proof.
+      move=> Hmu Hcase Hle w.
+      have Hle' : mu <= RE T R r2 r1 by rewrite (RE_sym R_tsim).
+      split; [exact: (fuzzy_den_sub Hmu Hcase Hle) |
+              exact: (fuzzy_den_sub Hmu Hcase Hle')].
+    Qed.
+
+    (* ============================================================ *)
+    (* Proposition 4.1: when R is godelian or mu ⊗ mu = mu, the      *)
+    (* mu-cuts of R, R^E, R^w and R^L are equivalences              *)
+    (* ============================================================ *)
+
+    (* Proposition 4.1(1), symbols *)
+    Lemma R_cut_equivalence (mu : simval) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      Relation_Definitions.equivalence A (mu_cut mu R).
+    Proof.
+      move=> Hmu [Hg|Hidem].
+      - exact: (T_equivalence_godelian R_tsim Hg Hmu).
+      - exact: (T_equivalence_idem R_tsim Hmu Hidem).
+    Qed.
+
+    (* Proposition 4.1(2), regular expressions, on all of E *)
+    Lemma RE_cut_equivalence (mu : simval) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      Relation_Definitions.equivalence regex (mu_cut mu (RE T R)).
+    Proof.
+      move=> Hmu [Hg|Hidem].
+      - exact: (T_equivalence_godelian (RE_is_T_similarity R_tsim)
+                  (RE_godelian R_tsim Hg) Hmu).
+      - exact: (T_equivalence_idem (RE_is_T_similarity R_tsim) Hmu Hidem).
+    Qed.
+
+    (* Proposition 4.1(3), words, is [RwT_cut_equivalence] above. *)
+
+    (* Proposition 4.1(4), languages, for a finite alphabet *)
+    Lemma RLT_cut_equivalence (alphabet : seq A)
+        (alphabet_complete : forall a : A, a \in alphabet) (mu : simval) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      Relation_Definitions.equivalence language (mu_cut mu RLT).
+    Proof.
+      move=> Hmu [Hg|Hidem].
+      - exact: (T_equivalence_godelian RLT_is_T_similarity
+                  (RLT_godelian alphabet_complete Hg) Hmu).
+      - exact: (T_equivalence_idem RLT_is_T_similarity Hmu Hidem).
+    Qed.
+
   End GeneralWordLanguageSimilarity.
 
 End SimilarityRelations.

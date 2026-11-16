@@ -175,6 +175,14 @@ Module Derivatives (X : OSYM).
     by rewrite -cat_cons.
   Qed.
 
+  (* Theorem 4.1(1): u ∈ L(r) iff ε ∈ L(D_u(r)) *)
+  Lemma D_eps_correct (u : word) (r : regex) : ([::] \in D u r) = (u \in r).
+  Proof. by rewrite D_correct cats0. Qed.
+
+  (* Theorem 4.1(1), decided syntactically: D_u(r) is nullable iff u ∈ L(r) *)
+  Lemma D_nullable (u : word) (r : regex) : has_eps (D u r) = (u \in r).
+  Proof. by rewrite nullable_correct D_eps_correct. Qed.
+
 
   Definition regular (L : language) : Prop :=
     exists r : regex, L =i den r.

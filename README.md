@@ -63,7 +63,30 @@ The following table maps the main definitions, lemmas, propositions, and theorem
 | Lemma: `R^E`, `R^w`, `R^L` are T-similarities | `coq/src/SimilarityRelations.v`, theorems `RE_is_T_similarity` (item 1, on all of E), `RwT_is_T_similarity` (item 2), `RLT_is_T_similarity` (item 3); supporting proofs `RE_sym`, `RE_trans`, `RE_trans_degenerate`, `RwT_refl`, `RwT_sym`, `RwT_trans`, `hausRwT_refl`, `hausRwT_trans`, `tn_supRwT` (uses left-continuity), `tpow_mono`, `tpow_T` |
 | Lemma: Gödelian transfer to `R^w`, `R^E`, `R^L` | `coq/src/SimilarityRelations.v`, theorems `RwT_godelian`, `RE_godelian`, `RLT_godelian` (for a finite alphabet, the paper's standing assumption); supporting proofs `RE_01`, `tpow_idem`, `InfN_tpow_idem`, `finite_max`, `finite_min`, `SupL_attained`, `InfL_attained`, `RLT_values_spec`, `RLT_in_values` |
 | Lemma: positive `R^E` forces a common skeleton | `coq/src/SimilarityRelations.v`, theorem `RE_pos_skeleton`; definitions `skeleton`, `holes`, `fill`; supporting proofs `RE_pos_skel_of`, `fill_skel_of`, `size_syms_of`, `tn_pos` |
+| Definition: Fuzzy semantic interpretation `L^μ` | `coq/src/SimilarityRelations.v`, definition `fuzzy_den` |
+| Theorem 3.1(1): `R^E(r1,r2) ≤ R^L(L(r1),L(r2))` | `coq/src/SimilarityRelations.v`, theorem `RE_le_RLT` (on all of E, for every T-norm; left-continuity is not used); supporting proofs `RwT_cat`, `RE_witness_degenerate`, `RE_witness`, `RE_le_hausRwT` |
+| Theorem 3.1(2): `R^L` as a sup of `R^E` over equivalent expressions | todo |
+| Theorem 3.1, "moreover": `R^E(r1,r2) ≥ μ` gives `L^μ(r1) = L^μ(r2)` when `R` is Gödelian or `μ ⊗ μ = μ` | `coq/src/SimilarityRelations.v`, theorem `RE_cut_fuzzy_den_eq` (on all of E); supporting proofs `RwT_cut_equivalence`, `fuzzy_den_sub` |
 | Lemma: Finite Syntactic Similarity | `coq/src/SimilarityRelations.v`, theorem `RE_nonzero_finite`; definition `sym_seqs`; supporting proofs `sym_seqs_complete`, `In_map_mem`, `RE_pos_skel_of` |
+
+### Section 4: Derivatives and their Fuzzification
+
+| Paper item | Rocq formalization |
+|---|---|
+| Definition: Semantic derivative `∂_a(L)`, `∂_u(L)` | `coq/src/Derivatives.v`, definitions `dlang_char`, `dlang`; proofs `dlang_nil`, `dlang_cat`, `dlang_correct`, `dlang_charE` |
+| Definition: Syntactic derivative `D_a(r)`, `D_u(r)` | `coq/src/Derivatives.v`, definitions `D_char`, `D`; proofs `D_nil`, `D_cat` |
+| Theorem 4.1(1): `u ∈ L(r)` iff `ε ∈ D_u(r)` | `coq/src/Derivatives.v`, theorem `D_eps_correct`; nullability form `D_nullable` (`has_eps (D u r) = (u \in r)`) |
+| Theorem 4.1(2): `∂_u(L)` is regular | `coq/src/Derivatives.v`, theorem `derivative_regular` |
+| Theorem 4.1(3): `L(D_u(r)) = ∂_u(L(r))` | `coq/src/Derivatives.v`, theorem `D_correct`; supporting proof `D_char_correct` |
+| Theorem 4.1(4): syntactic finiteness up to canonicalization | todo |
+| Theorem 4.1(5): semantic finiteness | todo |
+| Definitions: `μ`-fuzzy semantic and syntactic derivatives, by a symbol and by a word | todo |
+| Theorem 4.2 (Main), items 1–6 | todo |
+| Proposition 4.1: `μ`-cuts of `R`, `R^E`, `R^w`, `R^L` are equivalences when `R` is Gödelian or `μ ⊗ μ = μ` | `coq/src/SimilarityRelations.v`, theorems `R_cut_equivalence` (item 1), `RE_cut_equivalence` (item 2, on all of E), `RwT_cut_equivalence` (item 3), `RLT_cut_equivalence` (item 4, for a finite alphabet) |
+| Proposition 4.2: simplified fuzzy derivatives when `μ`-cuts are equivalences | todo |
+| Definition: quotient alphabet `Σ^μ`, maps `q_μ`, `q_μ*`, quotient language `[L]_μ` | todo |
+| Proposition 4.3: fuzzy derivative via the quotient alphabet | todo |
+| Proposition 4.4: `L(D_a^μ(r)) ⊆ ∂_a^μ(L(r))` via the quotient alphabet | todo |
 
 | Paper item | Paper location | Rocq location |
 |---|---|---|

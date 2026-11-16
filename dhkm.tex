@@ -321,7 +321,14 @@ $0 < \cut \le 1$, its {\em fuzzy semantic interpretation} is the language $\math
 \end{enumerate}
 Moreover if $\cR$ is a G\"odelian T-similarity relation, or $\mu\otimes\mu=\mu $, then $\mathcal R^E(r_1,r_2)\geq \mu$ implies that $L^\mu(r_1)=L^\mu(r_2)$;
 \end{theorem}
-{\color{red} Rocq proof ??}\vspace{0.5cm}
+\begin{proof}
+\begin{sloppypar}\raggedright
+Item 1 and the ``moreover'' part are proved in \path{coq/src/SimilarityRelations.v},
+theorems \path{RE_le_RLT} (item 1) and
+\path{RE_cut_fuzzy_den_eq} (``moreover'')~\cite{OurRocqRepo}.
+{\color{red} Item 2: no Rocq proof.}
+\end{sloppypar}
+\end{proof}
 
 
 
@@ -459,6 +466,14 @@ $L\subseteq\Sigma^*$ a regular language, and $u\in\Sigma^*$. Then:
         finite.
 \end{enumerate}
 \end{theorem}
+\begin{proof}
+\begin{sloppypar}\raggedright
+Items 1--3 are proved in \path{coq/src/Derivatives.v}, theorems
+\path{D_eps_correct} (item 1), \path{derivative_regular} (item 2) and
+\path{D_correct} (item 3)~\cite{OurRocqRepo}. Items 4 and 5 are due to
+Brzozowski~\cite{B64}. {\color{red} Items 4 and 5: no Rocq proof yet.}
+\end{sloppypar}
+\end{proof}
 {\begin{remark}\em  {\bf On the number of derivatives}\ If we were to take derivatives up to semantic equivalence, then we would get that the cardinality of the sets in Theorem~\ref{the:derivative}.3 and .4 would be equal. But even if we take derivatives only up to canonical form, this is not the case. For example, consider the restricted regular expressions $a^\star
 +b(a+\varepsilon)^\star$, then we have that $\mathcal D_a=a^\star$ and $\mathcal D_b=(a+\varepsilon)^\star$, which are language equivalent. So we have that the cardinality of $\bigl\{\, \partial_{u}(L) \mid u \in \Sigma^\star \bigr\}$ is two, while that of $\bigl\{\, \mathcal D_{u}(L) \mid u \in \Sigma^\star \bigr\}$ is three.\end{remark}}
 {\color{red} We should compute an estimate on the number of syntactic derviatives up to canonicalization.}
@@ -600,8 +615,14 @@ $
 is an equivalence relation on languages. 
 \end{enumerate}
 \end{proposition}
-
-{\color{red} Rocq?? Proofs??}\vspace{1 cm}
+\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/SimilarityRelations.v}, theorems
+\path{R_cut_equivalence} (item 1), \path{RE_cut_equivalence} (item 2),
+\path{RwT_cut_equivalence} (item 3) and
+\path{RLT_cut_equivalence} (item 4)~\cite{OurRocqRepo}.
+\end{sloppypar}
+\end{proof}
 
 Capitalizing on the above equivalences definitions in Section~\ref{sec:fuzzyderivatives} simplify significantly. 
 
