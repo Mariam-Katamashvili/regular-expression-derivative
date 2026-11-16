@@ -84,7 +84,7 @@ The following table maps the main definitions, lemmas, propositions, and theorem
 | Definition 4.5: `μ`-fuzzy syntactic derivative `D_a^μ(r)` | `coq/src/FuzzyDerivatives.v`, definition `Dmu_char` (a finite sum `sum_re` over the alphabet and `RE_candidates`); membership lemma `Dmu_charP` |
 | Definition 4.6: `μ`-fuzzy semantic derivative by a word `∂_u^μ(L)` | `coq/src/FuzzyDerivatives.v`, definition `fdlang` |
 | Definition 4.7: `μ`-fuzzy syntactic derivative by a word `D_u^μ(r)`, with the value sets `Λ` of the remark after it | `coq/src/FuzzyDerivatives.v`, definitions `Dmu`, `Lambda`, `Lambda_char`; lemmas `Dmu_consP`, `Lambda_charP`, `Lambda_in01` |
-| Theorem 4.2(1): experimentum crucis | todo |
+| Theorem 4.2(1): experimentum crucis, `u ∈ L^μ(r)` iff `ε ∈ L(D_u^μ(r))` | `coq/src/FuzzyDerivatives.v`, theorem `experimentum_crucis` (for every T-norm, on all of E, finite alphabet); supporting proofs `Dmu_eps_sound`, `Dmu_eps_complete`, `Dmu_antitone` |
 | Theorem 4.2(2): `D_a^μ(r)` is a regular expression | by construction: `Dmu_char` returns a `regex`; regularity of `∂_a^μ(L)` is todo |
 | Theorem 4.2(3): `L(D_a^μ(r)) ⊆ ∂_a^μ(L(r))` | `coq/src/FuzzyDerivatives.v`, theorem `Dmu_char_sound` (for every T-norm, on all of E) |
 | Theorem 4.2(4)–(6): finiteness and decidability | todo |
