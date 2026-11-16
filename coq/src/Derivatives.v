@@ -9,7 +9,7 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Module Derivatives (X : OSYM).
+Module Derivatives (X : SYM).
   Import X.
 
   Module Export N := Nullable X.

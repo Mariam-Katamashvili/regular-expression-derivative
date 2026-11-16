@@ -620,7 +620,10 @@ is an equivalence relation on languages.
 Proved in \path{coq/src/SimilarityRelations.v}, theorems
 \path{R_cut_equivalence} (item 1), \path{RE_cut_equivalence} (item 2),
 \path{RwT_cut_equivalence} (item 3) and
-\path{RLT_cut_equivalence} (item 4)~\cite{OurRocqRepo}.
+\path{RLT_cut_equivalence} (item 4)~\cite{OurRocqRepo}; for item 4 the case
+$\mu\otimes\mu=\mu$ holds for any alphabet (\path{RLT_cut_equivalence_idem}), while
+the g\"odelian case uses Lemma~\ref{lem:godelian-transfer} for $\cR^L$ and is proved
+for a finite alphabet.
 \end{sloppypar}
 \end{proof}
 
