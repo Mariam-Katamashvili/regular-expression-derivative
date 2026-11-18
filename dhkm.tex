@@ -314,7 +314,9 @@ $0 < \cut \le 1$, its {\em fuzzy semantic interpretation} is the language $\math
 \begin{enumerate} 
 \item$\mathcal R^E(r_1,r_2)\leq \mathcal R^L(\mathcal L(r_1),\mathcal L(r_2));$
 
-\item$\mathcal{R}^L\bigl(L(r_1),L(r_2)\bigr)=\sup\limits_{\substack{L(r_1)=L(r'_1)\\L(r_2)=L(r'_2)}}\mathcal{R}^E(r_1',r_2')$.
+\item Moreover if $\cR$ is a G\"odelian T-similarity relation, or $\mu\otimes\mu=\mu $, is $\mathcal{R}^L\bigl(L(r_1),L(r_2)\bigr)=\sup\limits_{\substack{L(r_1)=L(r'_1)\\L(r_2)=L(r'_2)}}\mathcal{R}^E(r_1',r_2')$.
+
+%\item$\mathcal{R}^L\bigl(L(r_1),L(r_2)\bigr)=\sup\limits_{\substack{L(r_1)=L(r'_1)\\L(r_2)=L(r'_2)}}\mathcal{R}^E(r_1',r_2')$.
 
 %\item {\color{red}$\mathcal{R}^L\bigl(L(r_1),L(r_2)\bigr)$ is bounded below by:
 %\[\mathcal{R}^L\bigl(L(r_1),L(r_2)\bigr)\geq\sup\Bigl\{\mathcal{R}^E(r_1',r_2')\;\Bigm|\; r_1',r_2' \in R^\Sigma,\; L(r_1')=L(r_1),\;L(r_2')=L(r_2)\Bigr\}.\]}
@@ -326,9 +328,17 @@ Moreover if $\cR$ is a G\"odelian T-similarity relation, or $\mu\otimes\mu=\mu $
 Item 1 and the ``moreover'' part are proved in \path{coq/src/SimilarityRelations.v},
 theorems \path{RE_le_RLT} (item 1) and
 \path{RE_cut_fuzzy_den_eq} (``moreover'')~\cite{OurRocqRepo}.
-{\color{red} Item 2: no Rocq proof.}
 \end{sloppypar}
+
+{\color{red} Item 2 ROCQ PROOF NOT NEEDED IF TOO NUCH WORK: Suppose $\mathcal R^L(L(v),L(w))\geq \mu$, then consider the alphabet $\Sigma^{2,\mu} =\{ (a,b)\mid \mathcal R(a,b)\geq\mu, a\in v, b\in w\}$. The  language $$L(v\times w) = \{(a_1,b_1)\ldots(a_n,b_n)\mid a_1\ldots a_n\in L(v), b_1\ldots b_n\in L(w), \mathcal R)(a_i,b_i)\geq \mu\}\in (\Sigma^{2,\mu})^* $$ is clearly regular, because it can be recognized by the synchronized product of the automata which recognize $L(v)$ and $L(w)$ respectively. Clearly  taking just the first component in each word of $L(v\times w)$  we get back $L(v)$ and if we take just the second component we get back $L(w)$. Since $L(v\times w)$ is regular  there exists a regular expression $u$ over $\Sigma^{2,\mu}$ such that $L(v\times w)= L(u) $. Now  define the regular expressions in $\Sigma$, $\pi_1 u$ and $\pi_2 u$, given by removing the second components and the first components respectively in $u$, we have that by construction $L(v)=L(\pi_1 u)$ and $L(v)=L(\pi_2 u)$ and we are done because $\mathcal R^E(\pi_1 u,pi_2 u)\ geq \mu$.}
+
 \end{proof}
+
+{\color{red}\begin{remark}[\bf Regularization and similarity]
+Notice that there exist non regular languages which can be $\mu$-similar to regular languages. For example consider the language $K$ the language over two symbols $\{a,b\}$ consisting of which consist of sequences of $b$'s which contain a number of $a$'s  corresponfing to indexes of non-terminating Turing machines. Clearly if $\mathcal R(a,b)\geq \mu$ then $\mathcal R^L(K,L(a^\star))\geq \mu$ in G\"odels' T-norm.
+\end{remark}
+}
+
 
 
 
