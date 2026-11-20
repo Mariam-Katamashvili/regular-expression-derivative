@@ -22,11 +22,11 @@ Module FuzzyDerivatives (X : SYM).
   Definition Rleb (x y : simval) : bool := if Rle_dec x y then true else false.
   Definition Rltb (x y : simval) : bool := if Rlt_dec x y then true else false.
 
-  Lemma RlebP (x y : simval) : Rleb x y = true <-> x <= y.
-  Proof. by rewrite /Rleb; case: (Rle_dec x y). Qed.
+  Lemma RlebP (x y : simval) : reflect (x <= y) (Rleb x y).
+  Proof. by rewrite /Rleb; case: (Rle_dec x y) => H; constructor. Qed.
 
-  Lemma RltbP (x y : simval) : Rltb x y = true <-> x < y.
-  Proof. by rewrite /Rltb; case: (Rlt_dec x y). Qed.
+  Lemma RltbP (x y : simval) : reflect (x < y) (Rltb x y).
+  Proof. by rewrite /Rltb; case: (Rlt_dec x y) => H; constructor. Qed.
 
   (* the sum r_1 + ... + r_n of a list of expressions (Empty when n = 0) *)
   Fixpoint sum_re (l : seq regex) : regex :=
@@ -356,6 +356,67 @@ Module FuzzyDerivatives (X : SYM).
       - move=> Hden.
         have [v [Hv Huv]] := Dmu_eps_sound Hmu Hden.
         by exists v.
+    Qed.
+
+    (* ============================================================ *)
+    (* Proposition 4.2: when R is godelian or mu ⊗ mu = mu, the      *)
+    (* fuzzy derivatives only need the mu-cuts                       *)
+    (* ============================================================ *)
+
+    (* Proposition 4.2(1), right-hand side: the sum of D_b(s) over
+       a ~_mu b and s ~_mu^E r *)
+    Definition Dmu_char_cut (mu : simval) (a : A) (r : regex) : regex :=
+      sum_re (List.flat_map (fun b =>
+                List.flat_map (fun s =>
+                  if Rleb mu (R a b) && Rleb mu (RE T R s r)
+                  then [:: D.D_char b s] else [::])
+                (cands r))
+              alphabet).
+
+    (* Proposition 4.2(2), right-hand side *)
+    Definition fdlang_char_cut (mu : simval) (a : A) (L : word -> Prop) :
+        word -> Prop :=
+      fun w => exists b v,
+        mu_cut mu R a b /\ mu_cut mu (RwT T R) w v /\ L (b :: v).
+
+    (* Proposition 4.2(1), on all of E *)
+    Theorem Dmu_char_cutE (mu : simval) (a : A) (r : regex) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      Dmu_char mu a r = Dmu_char_cut mu a r.
+    Proof.
+      move=> [Hmu0 Hmu1] Hcase.
+      have Hmu : in01 mu by split; lra.
+      congr sum_re; apply: List.flat_map_ext => b.
+      apply: List.flat_map_ext => s.
+      have Hsplit := @tn_cut_split T _ _ _ Hmu (R_range a b) (RE_range R_tsim s r).
+      have {}Hsplit : mu <= T (R a b) (RE T R s r) <->
+                      mu <= R a b /\ mu <= RE T R s r.
+      { apply: Hsplit; case: Hcase => [Hg|Hidem]; [right|by left].
+        by split; [rewrite -Hg | rewrite -(RE_godelian R_tsim Hg)]. }
+      suff -> : Rleb mu (T (R a b) (RE T R s r)) =
+                Rleb mu (R a b) && Rleb mu (RE T R s r) by [].
+      apply/RlebP/andP.
+      - by move/Hsplit => [H1 H2]; split; apply/RlebP.
+      - by move=> [/RlebP H1 /RlebP H2]; apply/Hsplit.
+    Qed.
+
+    (* Proposition 4.2(2) *)
+    Theorem fdlang_char_cutP (mu : simval) (a : A) (L : word -> Prop) (w : word) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      fdlang_char mu a L w <-> fdlang_char_cut mu a L w.
+    Proof.
+      move=> [Hmu0 Hmu1] Hcase.
+      have Hmu : in01 mu by split; lra.
+      have Hsplit b v : mu <= T (R a b) (RwT T R w v) <->
+                        mu <= R a b /\ mu <= RwT T R w v.
+      { apply: (@tn_cut_split T _ _ _ Hmu (R_range a b) (RwT_range R_tsim w v)).
+        case: Hcase => [Hg|Hidem]; [right|by left].
+        by split; [rewrite -Hg | rewrite -(RwT_godelian R_tsim Hg)]. }
+      split.
+      - move=> [b [v [/Hsplit [Hab Hwv] HL]]].
+        by exists b, v.
+      - move=> [b [v [Hab [Hwv HL]]]].
+        by exists b, v; split => //; apply/Hsplit.
     Qed.
 
   End FuzzyDerivative.

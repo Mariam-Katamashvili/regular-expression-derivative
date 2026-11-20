@@ -243,6 +243,21 @@ Module SimilarityRelations (X : SYM).
         exact: (tn_idem_le Hy Hx Hyy Hyx).
     Qed.
 
+    (* if mu ⊗ mu = mu, or x and y are idempotent, the cut mu <= x ⊗ y
+       splits into mu <= x and mu <= y *)
+    Lemma tn_cut_split (mu x y : simval) :
+      in01 mu -> in01 x -> in01 y ->
+      T mu mu = mu \/ (T x x = x /\ T y y = y) ->
+      mu <= T x y <-> mu <= x /\ mu <= y.
+    Proof.
+      move=> Hmu Hx Hy Hcase; split.
+      - move=> Hle; split; apply: (Rle_trans _ _ _ Hle);
+          [exact: tn_le_l | exact: tn_le_r].
+      - move=> [Hmx Hmy]; case: Hcase => [Hidem|[Hxx Hyy]].
+        + rewrite -Hidem; exact: (tn_mono2 Hmu Hx Hmu Hy Hmx Hmy).
+        + by case: (tn_idem_min Hx Hy Hxx Hyy) => ->.
+    Qed.
+
     (* x ⊗ y > 0 forces x > 0 and y > 0. *)
     Lemma tn_pos (x y : simval) :
       in01 x -> in01 y -> 0 < T x y -> 0 < x /\ 0 < y.

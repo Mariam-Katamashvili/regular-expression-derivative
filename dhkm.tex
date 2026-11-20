@@ -667,7 +667,13 @@ $$
 $$
 \end{enumerate}
 \end{proposition}
-{\color{red} Rocq?? Proofs??}\bigskip
+\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/FuzzyDerivatives.v}, theorems
+\path{Dmu_char_cutE} (item 1) and \path{fdlang_char_cutP} (item 2)~\cite{OurRocqRepo}.
+\end{sloppypar}
+\end{proof}
+\bigskip
 
 Proposition~\ref{the:quotient-fuzzy-derivative} below provides the explanation for  the above simplifications. Namely, when $\cR^\mu$ is an equivalence,  either because $\cR$ is a g\"odelian T-similarity relation on $\Sigma$ or  a T-similarity relation for a cut value $0<\cut \le 1$ such that $\mu\otimes\mu=\mu$,  then the {\em fuzzy derivatives} become {\em ordinary derivatives}, when we pass to the quotient alphabet, {\em i.e.}, once letters are identified up to
 $\cut$-similarity. The effect of differentiating with respect to $a$ is the same as
