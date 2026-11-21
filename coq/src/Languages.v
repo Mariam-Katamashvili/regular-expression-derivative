@@ -334,6 +334,30 @@ Section Lang.
           exact Hih.
   Qed.
 
+  (* The blocks produced by splits are non-empty. *)
+  Lemma splits_nonempty (w : word) (xs : seq word) :
+    xs \in splits w -> all (fun x => x != [::]) xs.
+  Proof.
+    elim: xs w => [//|x xs IH] w Hxs /=.
+    apply/andP; split; last exact: (IH _ (splits_tail Hxs)).
+    case: w Hxs => [|a w] Hxs; first by rewrite mem_seq1 in Hxs.
+    by have [t [ys [-> _]]] := splits_cons_shape Hxs.
+  Qed.
+
+  (* Conversely, any list of non-empty blocks is a decomposition of its
+     concatenation. *)
+  Lemma splits_complete (xs : seq word) :
+    all (fun x => x != [::]) xs -> xs \in splits (flatten_words xs).
+  Proof.
+    elim: xs => [|x xs IH] /=; first by rewrite mem_seq1.
+    by move=> /andP [Hx /IH Hxs]; exact: splits_head_cat.
+  Qed.
+
+  (* Renaming letters commutes with concatenating blocks. *)
+  Lemma map_flatten_words (f : A -> A) (xs : seq word) :
+    map f (flatten_words xs) = flatten_words (map (map f) xs).
+  Proof. by elim: xs => [//|x xs /= <-]; rewrite map_cat. Qed.
+
   (* If a::w belongs to L*, then its first block is of the form a::u and the
      remaining blocks witness a star decomposition of the suffix. *)
   Lemma star_cons_split (L : language) (a : A) (w : word) :

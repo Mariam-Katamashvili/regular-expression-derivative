@@ -1,6 +1,7 @@
 From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq.
 Require Import Reals Lra.
 
+From regexderiv Require Import Languages.
 From regexderiv Require Import Alphabet.
 From regexderiv Require Import SimilarityRelations.
 
@@ -529,6 +530,111 @@ Module FuzzyDerivatives (X : SYM).
         exists v; split => //.
         apply/(fdlang_char_quotP _ _ _ Hmu Hcase).
         by exists (b :: v); rewrite qmu_word_cons Hba Hvx.
+    Qed.
+
+    (* ============================================================ *)
+    (* Definition 4.8(2): q_mu^* on regular expressions,            *)
+    (*   q_mu^*(r[a_1,...,a_n]) = r[[a_1]_mu,...,[a_n]_mu]           *)
+    (* ============================================================ *)
+
+    Fixpoint qmu_re (mu : simval) (r : regex) : regex :=
+      match r with
+      | RS.Char c => RS.Char (qmu mu c)
+      | RS.Alt r1 r2 => RS.Alt (qmu_re mu r1) (qmu_re mu r2)
+      | RS.Seq r1 r2 => RS.Seq (qmu_re mu r1) (qmu_re mu r2)
+      | RS.Star r1 => RS.Star (qmu_re mu r1)
+      | RS.And r1 r2 => RS.And (qmu_re mu r1) (qmu_re mu r2)
+      | RS.Neg r1 => RS.Neg (qmu_re mu r1)
+      | _ => r
+      end.
+
+    (* qmu_re is the paper's r[a_1,...,a_n] |-> r[[a_1],...,[a_n]]:
+       same skeleton, every letter replaced by its class *)
+    Lemma qmu_re_fill (mu : simval) (r : regex) :
+      qmu_re mu r = fill (skel_of r) (map (qmu mu) (syms_of r)).
+    Proof.
+      elim: r => [| |c|r1 IH1 r2 IH2|r1 IH1 r2 IH2|r1 IH1|r1 IH1 r2 IH2|r1 IH1]
+                   //=; try by rewrite IH1.
+      all: have Hs : size (map (qmu mu) (syms_of r1)) = holes (skel_of r1)
+             by rewrite size_map size_syms_of.
+      all: by rewrite map_cat (take_size_cat _ Hs) (drop_size_cat _ Hs) IH1 IH2.
+    Qed.
+
+    (* for restricted r, quotienting the expression quotients its language:
+       L(q_mu^*(r)) = [L(r)]_mu *)
+    Lemma den_qmu_re (mu : simval) (r : regex) :
+      RS.restricted_regex r ->
+      forall x, RS.den (qmu_re mu r) x <-> quot_lang mu (RS.den r) x.
+    Proof.
+      rewrite /quot_lang /qmu_word.
+      elim=> [| |c|r1 r2 _ IH1 _ IH2|r1 r2 _ IH1 _ IH2|r1 _ IH1] x /=.
+      - by split => // [[w []]].
+      - split => [/eqP ->|[w [/eqP -> <-]] //]; by exists [::].
+      - split => [/eqP ->|[w [/eqP -> <-]]]; last exact: eqxx.
+        by exists [:: c]; split => //; exact: eqxx.
+      - rewrite /RS.plus /Languages.plus; split.
+        + case/orP => [/IH1|/IH2] [w [Hw <-]]; exists w; by rewrite Hw ?orbT.
+        + move=> [w [/orP [Hw|Hw] <-]]; apply/orP; [left; apply/IH1|right; apply/IH2];
+            by exists w.
+      - split.
+        + move/concP => [x1 [x2 [-> [/IH1 [w1 [Hw1 <-]] /IH2 [w2 [Hw2 <-]]]]]].
+          exists (w1 ++ w2); split; last by rewrite map_cat.
+          by apply: concP_inv; exists w1, w2.
+        + move=> [w [/concP [w1 [w2 [-> [Hw1 Hw2]]]] <-]].
+          apply: concP_inv; exists (map (qmu mu) w1), (map (qmu mu) w2).
+          split; first by rewrite map_cat.
+          by split; [apply/IH1; exists w1 | apply/IH2; exists w2].
+      - (* the blocks of a decomposition stay non-empty under renaming *)
+        have Hne (ws : seq word) :
+          all (preim (map (qmu mu)) (fun v => v != [::])) ws =
+          all (fun v => v != [::]) ws.
+        { by apply: eq_all => -[]. }
+        split.
+        + move/starP => [xs [Hsplit Hall]].
+          have [ws [Hws Hmap]] :
+            exists ws, all_in (RS.den r1) ws /\ map (map (qmu mu)) ws = xs.
+          { elim: xs Hall {Hsplit} => [|x0 xs IHxs] /=; first by exists [::].
+            move/andP => [/IH1 [w0 [Hw0 Hq]] /IHxs [ws [Hws <-]]].
+            by exists (w0 :: ws); rewrite /= Hw0 Hws Hq. }
+          exists (flatten_words ws); split.
+          * apply: (starP_inv _ Hws); apply: splits_complete.
+            have Hxs := splits_nonempty Hsplit.
+            by rewrite -Hmap all_map Hne in Hxs.
+          * by rewrite map_flatten_words Hmap; exact: splits_flatten Hsplit.
+        + move=> [w [/starP [ws [Hsplit Hall]] <-]].
+          apply: (starP_inv (xs := map (map (qmu mu)) ws)).
+          * rewrite -(splits_flatten Hsplit) map_flatten_words.
+            by apply: splits_complete; rewrite all_map Hne; exact: splits_nonempty Hsplit.
+          * elim: ws Hall {Hsplit} => [//|v ws IHws] /= /andP [Hv Hws].
+            by apply/andP; split; [apply/IH1; exists v | exact: IHws].
+    Qed.
+
+    (* ============================================================ *)
+    (* Proposition 4.4: for restricted r,                           *)
+    (*   L(D_a^mu(r)) ⊆ {w | q^*(w) ∈ L(D_[a](q^*(r)))}              *)
+    (*                = {w | q^*(w) ∈ d_[a](L(q^*(r)))}               *)
+    (*                = d_a^mu(L(r))                                  *)
+    (* ============================================================ *)
+
+    Theorem Dmu_char_quot (mu : simval) (a : A) (r : regex) :
+      RS.restricted_regex r -> cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      (forall w, RS.den (Dmu_char mu a r) w ->
+         RS.den (D.D_char (qmu mu a) (qmu_re mu r)) (qmu_word mu w)) /\
+      (forall w, RS.den (D.D_char (qmu mu a) (qmu_re mu r)) (qmu_word mu w) <->
+         D.dlang_char (qmu mu a) (RS.den (qmu_re mu r)) (qmu_word mu w)) /\
+      (forall w, D.dlang_char (qmu mu a) (RS.den (qmu_re mu r)) (qmu_word mu w) <->
+         fdlang_char mu a (RS.den r) w).
+    Proof.
+      move=> Hr Hmu Hcase.
+      have HBC w : RS.den (D.D_char (qmu mu a) (qmu_re mu r)) (qmu_word mu w) <->
+                   D.dlang_char (qmu mu a) (RS.den (qmu_re mu r)) (qmu_word mu w).
+      { by rewrite den_D_char. }
+      have HCD w : D.dlang_char (qmu mu a) (RS.den (qmu_re mu r)) (qmu_word mu w) <->
+                   fdlang_char mu a (RS.den r) w.
+      { rewrite (fdlang_char_quotP _ _ _ Hmu Hcase).
+        exact: (den_qmu_re mu Hr). }
+      split; [|split] => // w HA.
+      by apply/HBC/HCD; exact: Dmu_char_sound Hmu HA.
     Qed.
 
   End FuzzyDerivative.

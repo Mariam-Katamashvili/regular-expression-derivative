@@ -480,8 +480,8 @@ $L\subseteq\Sigma^*$ a regular language, and $u\in\Sigma^*$. Then:
 \begin{sloppypar}\raggedright
 Items 1--3 are proved in \path{coq/src/Derivatives.v}, theorems
 \path{D_eps_correct} (item 1), \path{derivative_regular} (item 2) and
-\path{D_correct} (item 3)~\cite{OurRocqRepo}. Items 4 and 5 are due to
-Brzozowski~\cite{B64}. {\color{red} Items 4 and 5: no Rocq proof yet.}
+\path{D_correct} (item 3)~\cite{OurRocqRepo}.
+{\color{red} Items 4 and 5: no Rocq proof yet.}
 \end{sloppypar}
 \end{proof}
 {\begin{remark}\em  {\bf On the number of derivatives}\ If we were to take derivatives up to semantic equivalence, then we would get that the cardinality of the sets in Theorem~\ref{the:derivative}.3 and .4 would be equal. But even if we take derivatives only up to canonical form, this is not the case. For example, consider the restricted regular expressions $a^\star
@@ -584,8 +584,7 @@ is finite.
 \begin{sloppypar}\raggedright
 Items 1 and 3 are proved in \path{coq/src/FuzzyDerivatives.v}, theorems
 \path{experimentum_crucis} (item 1) and \path{Dmu_char_sound}
-(item 3)~\cite{OurRocqRepo}, for every T-norm. In item 2, $\mathcal D_a^\mu(r)$ is a
-regular expression by construction (definition \path{Dmu_char}).
+(item 3)~\cite{OurRocqRepo}.
 {\color{red} No Rocq proof yet: the regularity of $\partial_a^\mu(L)$ in item 2, and items 4--6.}
 \end{sloppypar}
 {\color{red} We might not want to provide Rocq proofs for all, but anyway the finiteness issue needs to be discussed. }
@@ -638,10 +637,7 @@ is an equivalence relation on languages.
 Proved in \path{coq/src/SimilarityRelations.v}, theorems
 \path{R_cut_equivalence} (item 1), \path{RE_cut_equivalence} (item 2),
 \path{RwT_cut_equivalence} (item 3) and
-\path{RLT_cut_equivalence} (item 4)~\cite{OurRocqRepo}; for item 4 the case
-$\mu\otimes\mu=\mu$ holds for any alphabet (\path{RLT_cut_equivalence_idem}), while
-the g\"odelian case uses Lemma~\ref{lem:godelian-transfer} for $\cR^L$ and is proved
-for a finite alphabet.
+\path{RLT_cut_equivalence} (item 4)~\cite{OurRocqRepo}.
 \end{sloppypar}
 \end{proof}
 
@@ -728,9 +724,7 @@ Hence,
 \begin{sloppypar}\raggedright
 Proved in \path{coq/src/FuzzyDerivatives.v}, theorems
 \path{fdlang_char_quotP} (the first equality) and
-\path{quot_fdlang_char} (the ``hence'' part)~\cite{OurRocqRepo}. There a class
-$[a]_\cut$ is represented by a fixed letter \path{qmu} $a$, with
-$[a]_\cut=[b]_\cut$ iff $a\sim_\cut^\Sigma b$ (lemma \path{qmu_eq}).
+\path{quot_fdlang_char} (the ``hence'' part)~\cite{OurRocqRepo}.
 \end{sloppypar}
 {\color{red} The sketch below still uses the old notation $\mathcal L^\cut$ for $[\mathcal L]_\cut$.}
 We prove the two inclusions.
@@ -764,15 +758,22 @@ $\partial_{[a]_\cut}(\mathcal L^\cut)$ consists only of quotient words, and each
 such word has at least one representative in $\Sigma^*$.
 \end{proof}
 
-\begin{proposition} 
-Let $\cR$ be a g\"odelian T-similarity relation on $\Sigma$ or just a T-similarity relation for a cut value $0 < \cut \le 1$ such that $\mu\otimes\mu=\mu$, moreover let $\mathcal{L}\subseteq\Sigma^*$ and $a\in\Sigma$, then:
+\begin{proposition}\label{prop:quotient-syntactic-derivative}
+Let $\cR$ be a g\"odelian T-similarity relation on $\Sigma$ or just a T-similarity relation for a cut value $0 < \cut \le 1$ such that $\mu\otimes\mu=\mu$, moreover let $r$ be a restricted regular expression over $\Sigma$ and $a\in\Sigma$, then:
 \[
  \mathcal L\bigl(\mathcal D_a^\cut( r)\bigr)
   \subseteq
- \{w\in \Sigma^\star \mid q^\star_\mu(w)\in \mathcal L\bigl(\mathcal D_{[a]_\cut} [r]_\mu\bigr)\}= \]
-\[=\{w\in \Sigma^\star \mid q^\star_\mu(w)\in \partial_{[a]_\mu}(\mathcal L([r]_\mu)\}= \partial_a^\mu(\mathcal L(r))\]
-the counterexample in Remark~\ref{mismatch} provides an example where the inclusion is strict. 
-\end{proposition}\vspace{1cm}
+ \{w\in \Sigma^* \mid q_\cut^*(w)\in \mathcal L\bigl(\mathcal D_{[a]_\cut}(q_\cut^*(r))\bigr)\}= \]
+\[=\{w\in \Sigma^* \mid q_\cut^*(w)\in \partial_{[a]_\cut}\bigl(\mathcal L(q_\cut^*(r))\bigr)\}= \partial_a^\cut(\mathcal L(r))\]
+the counterexample in Remark~\ref{mismatch} provides an example where the inclusion is strict.
+\end{proposition}
+\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/FuzzyDerivatives.v}, theorem
+\path{Dmu_char_quot}~\cite{OurRocqRepo}.
+\end{sloppypar}
+\end{proof}
+\vspace{1cm}
 
 \section{Discussion}
 \begin{itemize}
