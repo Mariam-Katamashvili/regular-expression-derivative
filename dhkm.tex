@@ -724,7 +724,15 @@ Hence,
 \]
 \end{proposition}
 
-\begin{proof}[Proof sketch]{\color{red} not checked, the notation has changed also}
+\begin{proof}
+\begin{sloppypar}\raggedright
+Proved in \path{coq/src/FuzzyDerivatives.v}, theorems
+\path{fdlang_char_quotP} (the first equality) and
+\path{quot_fdlang_char} (the ``hence'' part)~\cite{OurRocqRepo}. There a class
+$[a]_\cut$ is represented by a fixed letter \path{qmu} $a$, with
+$[a]_\cut=[b]_\cut$ iff $a\sim_\cut^\Sigma b$ (lemma \path{qmu_eq}).
+\end{sloppypar}
+{\color{red} The sketch below still uses the old notation $\mathcal L^\cut$ for $[\mathcal L]_\cut$.}
 We prove the two inclusions.
 
 Let $w\in\partial_a^\cut(\mathcal L)$. By Definition~\ref{fuzzyderivative},

@@ -61,6 +61,7 @@ Module FuzzyDerivatives (X : SYM).
     Hypothesis alphabet_complete : forall a : A, a \in alphabet.
 
     Let R_range : forall a b, in01 (R a b) := tsim_range R_tsim.
+    Let R_refl : forall a, R a a = 1 := prox_refl (tsim_prox R_tsim).
 
     Let cands (r : regex) : seq regex := RE_candidates alphabet r.
 
@@ -401,22 +402,133 @@ Module FuzzyDerivatives (X : SYM).
     Qed.
 
     (* Proposition 4.2(2) *)
+    (* the cut R(a,b) ⊗ R^w(w,v) >= mu splits letter by letter *)
+    Lemma RwT_cut_split (mu : simval) (a b : A) (w v : word) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      mu <= T (R a b) (RwT T R w v) <-> mu <= R a b /\ mu <= RwT T R w v.
+    Proof.
+      move=> [Hmu0 Hmu1] Hcase.
+      apply: (@tn_cut_split T _ _ _ _ (R_range a b) (RwT_range R_tsim w v));
+        first by split; lra.
+      case: Hcase => [Hg|Hidem]; [right|by left].
+      by split; [rewrite -Hg | rewrite -(RwT_godelian R_tsim Hg)].
+    Qed.
+
     Theorem fdlang_char_cutP (mu : simval) (a : A) (L : word -> Prop) (w : word) :
       cut_value mu -> is_godelian T R \/ T mu mu = mu ->
       fdlang_char mu a L w <-> fdlang_char_cut mu a L w.
     Proof.
-      move=> [Hmu0 Hmu1] Hcase.
-      have Hmu : in01 mu by split; lra.
-      have Hsplit b v : mu <= T (R a b) (RwT T R w v) <->
-                        mu <= R a b /\ mu <= RwT T R w v.
-      { apply: (@tn_cut_split T _ _ _ Hmu (R_range a b) (RwT_range R_tsim w v)).
-        case: Hcase => [Hg|Hidem]; [right|by left].
-        by split; [rewrite -Hg | rewrite -(RwT_godelian R_tsim Hg)]. }
-      split.
-      - move=> [b [v [/Hsplit [Hab Hwv] HL]]].
+      move=> Hmu Hcase; split.
+      - move=> [b [v [/(RwT_cut_split _ _ _ _ Hmu Hcase) [Hab Hwv] HL]]].
         by exists b, v.
       - move=> [b [v [Hab [Hwv HL]]]].
-        by exists b, v; split => //; apply/Hsplit.
+        by exists b, v; split => //; apply/(RwT_cut_split _ _ _ _ Hmu Hcase).
+    Qed.
+
+    (* ============================================================ *)
+    (* Definition 4.8: the quotient alphabet Sigma^mu, the quotient *)
+    (* map q_mu, its extension q_mu^* to words, and [L]_mu           *)
+    (* A class [a]_mu is represented by one fixed letter q_mu(a):    *)
+    (* the first letter of the alphabet that is mu-similar to a.     *)
+    (* Sigma^mu is the set of these representatives, and             *)
+    (* q_mu(a) = q_mu(b) iff a ~_mu b (lemma [qmu_eq]).              *)
+    (* ============================================================ *)
+
+    Definition qmu (mu : simval) (a : A) : A :=
+      nth a alphabet (find (fun b => Rleb mu (R a b)) alphabet).
+
+    Definition qmu_word (mu : simval) (w : word) : word := map (qmu mu) w.
+
+    Lemma qmu_word_cons (mu : simval) (b : A) (v : word) :
+      qmu_word mu (b :: v) = qmu mu b :: qmu_word mu v.
+    Proof. by []. Qed.
+
+    Definition quot_lang (mu : simval) (L : word -> Prop) : word -> Prop :=
+      fun x => exists w, L w /\ qmu_word mu w = x.
+
+    Lemma qmu_has (mu : simval) (a : A) :
+      cut_value mu -> has (fun b => Rleb mu (R a b)) alphabet.
+    Proof.
+      move=> [_ Hmu1]; apply/hasP; exists a; first exact: alphabet_complete.
+      by apply/RlebP; rewrite R_refl.
+    Qed.
+
+    (* a is mu-similar to its representative *)
+    Lemma qmu_cut (mu : simval) (a : A) :
+      cut_value mu -> mu_cut mu R a (qmu mu a).
+    Proof. by move=> Hmu; apply/RlebP/(nth_find a (qmu_has a Hmu)). Qed.
+
+    (* q_mu is the quotient map: q_mu(a) = q_mu(b) iff a ~_mu b *)
+    Lemma qmu_eq (mu : simval) (a b : A) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      qmu mu a = qmu mu b <-> mu_cut mu R a b.
+    Proof.
+      move=> Hmu Hcase.
+      have [_ Htrans Hsym] := R_cut_equivalence R_tsim Hmu Hcase.
+      split.
+      - move=> Hq.
+        have Ha := qmu_cut a Hmu.
+        rewrite Hq in Ha.
+        exact: (Htrans _ _ _ Ha (Hsym _ _ (qmu_cut b Hmu))).
+      - move=> Hab.
+        have Hp : (fun c => Rleb mu (R a c)) =1 (fun c => Rleb mu (R b c)).
+        { move=> c; apply/RlebP/RlebP => H.
+          - exact: (Htrans _ _ _ (Hsym _ _ Hab) H).
+          - exact: (Htrans _ _ _ Hab H). }
+        rewrite /qmu (eq_find Hp).
+        apply: set_nth_default.
+        by rewrite -has_find; exact: qmu_has.
+    Qed.
+
+    (* w ~_mu v iff q_mu^*(w) = q_mu^*(v) *)
+    Lemma qmu_word_eq (mu : simval) (w v : word) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      mu_cut mu (RwT T R) w v <-> qmu_word mu w = qmu_word mu v.
+    Proof.
+      move=> Hmu Hcase; have [Hmu0 Hmu1] := Hmu.
+      rewrite /mu_cut /qmu_word.
+      elim: w v => [|a w IH] [|b v] /=.
+      - by split => // _; lra.
+      - by split => //; lra.
+      - by split => //; lra.
+      - rewrite (RwT_cut_split _ _ _ _ Hmu Hcase) IH; split.
+        + by move=> [/(qmu_eq _ _ Hmu Hcase) -> ->].
+        + by case=> /(qmu_eq _ _ Hmu Hcase) Hab ->.
+    Qed.
+
+    (* ============================================================ *)
+    (* Proposition 4.3: d_a^mu(L) = {w | q_mu^*(w) ∈ d_[a](([L]_mu))} *)
+    (* where w ∈ d_c(K) means c w ∈ K (Definition 4.2)               *)
+    (* ============================================================ *)
+
+    Theorem fdlang_char_quotP (mu : simval) (a : A) (L : word -> Prop) (w : word) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      fdlang_char mu a L w <-> quot_lang mu L (qmu mu a :: qmu_word mu w).
+    Proof.
+      move=> Hmu Hcase.
+      rewrite (fdlang_char_cutP _ _ _ Hmu Hcase); split.
+      - move=> [b [v [Hab [Hwv HL]]]].
+        exists (b :: v); split => //.
+        by rewrite qmu_word_cons (proj2 (qmu_eq _ _ Hmu Hcase) Hab)
+                   (proj1 (qmu_word_eq _ _ Hmu Hcase) Hwv).
+      - move=> [[|b v] [HL //]]; rewrite qmu_word_cons => -[Hba Hvw].
+        exists b, v; split; last split => //.
+        + by apply/(qmu_eq _ _ Hmu Hcase).
+        + by apply/(qmu_word_eq _ _ Hmu Hcase).
+    Qed.
+
+    (* Proposition 4.3, "hence": [d_a^mu(L)]_mu = d_[a]([L]_mu) *)
+    Corollary quot_fdlang_char (mu : simval) (a : A) (L : word -> Prop) (x : word) :
+      cut_value mu -> is_godelian T R \/ T mu mu = mu ->
+      quot_lang mu (fdlang_char mu a L) x <-> quot_lang mu L (qmu mu a :: x).
+    Proof.
+      move=> Hmu Hcase; split.
+      - move=> [w [Hw <-]].
+        exact/(fdlang_char_quotP _ _ _ Hmu Hcase).
+      - move=> [[|b v] [HL //]]; rewrite qmu_word_cons => -[Hba Hvx].
+        exists v; split => //.
+        apply/(fdlang_char_quotP _ _ _ Hmu Hcase).
+        by exists (b :: v); rewrite qmu_word_cons Hba Hvx.
     Qed.
 
   End FuzzyDerivative.

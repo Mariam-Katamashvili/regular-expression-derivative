@@ -90,8 +90,8 @@ The following table maps the main definitions, lemmas, propositions, and theorem
 | Theorem 4.2(4)–(6): finiteness and decidability | todo |
 | Proposition 4.1: `μ`-cuts of `R`, `R^E`, `R^w`, `R^L` are equivalences when `R` is Gödelian or `μ ⊗ μ = μ` | `coq/src/SimilarityRelations.v`, theorems `R_cut_equivalence` (item 1), `RE_cut_equivalence` (item 2, on all of E), `RwT_cut_equivalence` (item 3), `RLT_cut_equivalence` (item 4; the `μ ⊗ μ = μ` case for any alphabet is `RLT_cut_equivalence_idem`, the Gödelian case needs a finite alphabet) |
 | Proposition 4.2: simplified fuzzy derivatives when `R` is Gödelian or `μ ⊗ μ = μ` | `coq/src/FuzzyDerivatives.v`, theorems `Dmu_char_cutE` (item 1, an equality of expressions, on all of E) and `fdlang_char_cutP` (item 2); right-hand sides `Dmu_char_cut`, `fdlang_char_cut`; key fact `tn_cut_split` in `coq/src/SimilarityRelations.v` |
-| Definition: quotient alphabet `Σ^μ`, maps `q_μ`, `q_μ*`, quotient language `[L]_μ` | todo |
-| Proposition 4.3: fuzzy derivative via the quotient alphabet | todo |
+| Definition 4.8: quotient alphabet `Σ^μ`, maps `q_μ`, `q_μ*`, quotient language `[L]_μ` | `coq/src/FuzzyDerivatives.v`, definitions `qmu` (each class is represented by a fixed letter), `qmu_word`, `quot_lang`; lemmas `qmu_eq` (`q_μ(a) = q_μ(b)` iff `a ~_μ b`), `qmu_word_eq`, `qmu_cut`. The extension of `q_μ` to regular expressions is todo (needed for Proposition 4.4) |
+| Proposition 4.3: fuzzy derivative via the quotient alphabet | `coq/src/FuzzyDerivatives.v`, theorems `fdlang_char_quotP` (the equality) and `quot_fdlang_char` (the "hence" part); supporting lemma `RwT_cut_split` |
 | Proposition 4.4: `L(D_a^μ(r)) ⊆ ∂_a^μ(L(r))` via the quotient alphabet | todo |
 
 | Paper item | Paper location | Rocq location |
